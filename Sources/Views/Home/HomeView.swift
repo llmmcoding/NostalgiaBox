@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var viewModel = HomeViewModel()
     @State private var showPaywall = false
 
     var body: some View {
@@ -25,6 +26,36 @@ struct HomeView: View {
                         .padding(.horizontal)
                     }
 
+                    // Daily Nostalgia
+                    if let daily = viewModel.dailyContent {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("历史上的今天")
+                                .font(.headline)
+                                .padding(.horizontal)
+
+                            HStack(spacing: 12) {
+                                Text(daily.emoji)
+                                    .font(.largeTitle)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(daily.title)
+                                        .font(.subheadline.bold())
+                                    Text("\(daily.year)年")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(daily.description)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+                                Spacer()
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .padding(.horizontal)
+                        }
+                    }
+
                     // Quick Access
                     VStack(alignment: .leading, spacing: 12) {
                         Text("快速开始")
@@ -42,7 +73,7 @@ struct HomeView: View {
                                 color: .purple
                             )
                             .onTapGesture {
-                                // navigate to games
+                                // Tab switch to games - handled by parent
                             }
 
                             QuickAccessCard(
@@ -51,9 +82,6 @@ struct HomeView: View {
                                 subtitle: "万能音视频",
                                 color: .blue
                             )
-                            .onTapGesture {
-                                // navigate to player
-                            }
 
                             QuickAccessCard(
                                 icon: "🐣",
@@ -93,6 +121,9 @@ struct HomeView: View {
             .sheet(isPresented: $showPaywall) {
                 PaywallSheetView()
             }
+            .task {
+                await viewModel.load()
+            }
         }
     }
 }
@@ -122,103 +153,7 @@ struct QuickAccessCard: View {
     }
 }
 
-struct PaywallCardView: View {
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("🌟 解锁全部内容")
-                        .font(.headline)
-                    Text("一次购买，终身怀旧")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Text("$2.99")
-                    .font(.title2.bold())
-            }
-            .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.orange.opacity(0.8), Color.red.opacity(0.8)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-        }
-    }
-}
-
-struct PaywallSheetView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                Text("🌟")
-                    .font(.system(size: 80))
-
-                Text("解锁时光机全部内容")
-                    .font(.title.bold())
-
-                VStack(alignment: .leading, spacing: 12) {
-                    FeatureRow(icon: "🎮", text: "全部怀旧游戏")
-                    FeatureRow(icon: "📻", text: "复古播放器")
-                    FeatureRow(icon: "🐣", text: "电子宠物")
-                    FeatureRow(icon: "📅", text: "怀旧日历")
-                    FeatureRow(icon: "🚫", text: "无广告")
-                }
-                .padding()
-
-                VStack(spacing: 8) {
-                    Button("¥18 解锁全部") {
-                        // IAP trigger
-                        dismiss()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-
-                    Text("一次购买，永久使用")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Button("使用兑换码") {
-                    // redeem code
-                }
-                .font(.subheadline)
-            }
-            .padding()
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("关闭") { dismiss() }
-                }
-            }
-        }
-    }
-}
-
-struct FeatureRow: View {
-    let icon: String
-    let text: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Text(icon)
-            Text(text)
-            Spacer()
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-        }
-    }
-}
-
 #Preview {
     HomeView()
-        .environmentObject(AppState())
+        .environmentObject(AppState.shared)
 }

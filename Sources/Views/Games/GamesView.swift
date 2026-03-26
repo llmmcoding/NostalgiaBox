@@ -1,33 +1,8 @@
 import SwiftUI
 
 struct GamesView: View {
-    @State private var selectedCategory: GameCategory = .all
+    @StateObject private var viewModel = GamesViewModel()
     @State private var searchText = ""
-
-    enum GameCategory: String, CaseIterable {
-        case all = "全部"
-        case molabel = "魔塔"
-        case pixel = "像素RPG"
-        case runner = "跑酷"
-        case puzzle = "休闲益智"
-
-        var emoji: String {
-            switch self {
-            case .all: return "🎯"
-            case .molabel: return "🏰"
-            case .pixel: return "⚔️"
-            case .runner: return "🏃"
-            case .puzzle: return "🧩"
-            }
-        }
-    }
-
-    var filteredGames: [GameItem] {
-        GameItem.all.filter { game in
-            (selectedCategory == .all || game.category == selectedCategory.rawValue) &&
-            (searchText.isEmpty || game.title.localizedCaseInsensitiveContains(searchText))
-        }
-    }
 
     var body: some View {
         NavigationStack {
@@ -35,13 +10,13 @@ struct GamesView: View {
                 // Category Filter
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(GameCategory.allCases, id: \.self) { cat in
+                        ForEach(GamesViewModel.GameCategory.allCases, id: \.self) { cat in
                             CategoryChip(
                                 title: "\(cat.emoji) \(cat.rawValue)",
-                                isSelected: selectedCategory == cat
+                                isSelected: viewModel.selectedCategory == cat
                             ) {
                                 withAnimation(.easeInOut(duration: 0.2)) {
-                                    selectedCategory = cat
+                                    viewModel.selectedCategory = cat
                                 }
                             }
                         }
@@ -50,27 +25,54 @@ struct GamesView: View {
                     .padding(.vertical, 8)
                 }
 
-                // Game Grid
-                ScrollView {
-                    LazyVGrid(columns: [
-                        GridItem(.flexible(), spacing: 12),
-                        GridItem(.flexible(), spacing: 12)
-                    ], spacing: 12) {
-                        ForEach(filteredGames) { game in
-                            NavigationLink(value: game) {
-                                GameCardView(game: game)
-                            }
-                            .buttonStyle(.plain)
+                // Content
+                if viewModel.isLoading {
+                    Spacer()
+                    ProgressView("加载中...")
+                    Spacer()
+                } else if let error = viewModel.errorMessage {
+                    Spacer()
+                    VStack(spacing: 12) {
+                        Image(systemName: "wifi.exclamationmark")
+                            .font(.largeTitle)
+                            .foregroundStyle(.secondary)
+                        Text(error)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Button("重试") {
+                            Task { await viewModel.loadGames() }
                         }
+                        .buttonStyle(.bordered)
                     }
-                    .padding()
+                    Spacer()
+                } else {
+                    ScrollView {
+                        LazyVGrid(columns: [
+                            GridItem(.flexible(), spacing: 12),
+                            GridItem(.flexible(), spacing: 12)
+                        ], spacing: 12) {
+                            ForEach(viewModel.filteredGames) { game in
+                                NavigationLink(value: game) {
+                                    GameCardView(game: game)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding()
+                    }
+                    .refreshable {
+                        await viewModel.refresh()
+                    }
                 }
             }
             .navigationTitle("游戏")
-            .navigationDestination(for: GameItem.self) { game in
+            .navigationDestination(for: Game.self) { game in
                 GameDetailView(game: game)
             }
             .searchable(text: $searchText, prompt: "搜索游戏")
+            .task {
+                await viewModel.loadGames()
+            }
         }
     }
 }
@@ -94,15 +96,14 @@ struct CategoryChip: View {
 }
 
 struct GameCardView: View {
-    let game: GameItem
+    let game: Game
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Thumbnail placeholder
             RoundedRectangle(cornerRadius: 12)
                 .fill(
                     LinearGradient(
-                        colors: [game.color.opacity(0.6), game.color.opacity(0.3)],
+                        colors: [Color(hex: game.color).opacity(0.7), Color(hex: game.color).opacity(0.3)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -117,46 +118,29 @@ struct GameCardView: View {
                 Text(game.title)
                     .font(.headline)
                     .lineLimit(1)
+                    .foregroundStyle(.primary)
 
-                Text(game.category)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack {
+                    Text(game.category)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    Text(game.difficulty.rawValue)
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(Color(hex: game.difficulty.color))
+                }
             }
             .padding(.horizontal, 4)
         }
     }
 }
 
-struct GameItem: Identifiable, Hashable {
-    let id = UUID()
-    let title: String
-    let category: String
-    let emoji: String
-    let color: Color
-    let description: String
-    let difficulty: Difficulty
-
-    enum Difficulty: String {
-        case easy = "简单"
-        case medium = "中等"
-        case hard = "困难"
-    }
-
-    static let all: [GameItem] = [
-        GameItem(title: "魔塔·黄金大陆", category: "魔塔", emoji: "🏰", color: .yellow, description: "经典魔塔复刻，50层挑战", difficulty: .medium),
-        GameItem(title: "像素勇者", category: "像素RPG", emoji: "⚔️", color: .purple, description: "复古像素RPG，勇者救公主", difficulty: .medium),
-        GameItem(title: "跳跳像素人", category: "跑酷", emoji: "🏃", color: .green, description: "无尽跑酷，像素风格", difficulty: .easy),
-        GameItem(title: "宠物小精灵", category: "休闲益智", emoji: "🧩", color: .blue, description: "经典宠物收集游戏", difficulty: .easy),
-        GameItem(title: "魔塔·暗黑森林", category: "魔塔", emoji: "🌲", color: .green, description: "暗黑森林魔塔副本", difficulty: .hard),
-        GameItem(title: "龙之谷", category: "像素RPG", emoji: "🐉", color: .red, description: "龙与地下城风格像素RPG", difficulty: .hard),
-        GameItem(title: "方块跑酷", category: "跑酷", emoji: "🟧", color: .orange, description: "几何方块跑酷游戏", difficulty: .easy),
-        GameItem(title: "2048怀旧版", category: "休闲益智", emoji: "🔢", color: .indigo, description: "经典2048，像素风格", difficulty: .medium),
-    ]
-}
-
 struct GameDetailView: View {
-    let game: GameItem
+    let game: Game
     @State private var isPlaying = false
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
         ScrollView {
@@ -165,7 +149,7 @@ struct GameDetailView: View {
                 RoundedRectangle(cornerRadius: 20)
                     .fill(
                         LinearGradient(
-                            colors: [game.color.opacity(0.7), game.color.opacity(0.3)],
+                            colors: [Color(hex: game.color).opacity(0.7), Color(hex: game.color).opacity(0.3)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -183,12 +167,12 @@ struct GameDetailView: View {
 
                 VStack(spacing: 12) {
                     HStack {
-                        Label(game.difficulty.rawValue, systemImage: "star.fill")
+                        DifficultyBadge(difficulty: game.difficulty)
                         Spacer()
-                        Label(game.category, systemImage: "tag.fill")
+                        Text(game.category)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
 
                     Text(game.description)
                         .font(.body)
@@ -204,13 +188,21 @@ struct GameDetailView: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(game.color)
+                        .background(Color(hex: game.color))
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .padding(.horizontal)
                 .fullScreenCover(isPresented: $isPlaying) {
                     GamePlayerView(game: game)
+                }
+
+                // Locked indicator if not unlocked
+                if !appState.isUnlocked {
+                    Text("解锁完整版后可玩全部游戏")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 8)
                 }
             }
             .padding(.bottom, 40)
@@ -220,13 +212,31 @@ struct GameDetailView: View {
     }
 }
 
+struct DifficultyBadge: View {
+    let difficulty: Difficulty
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "star.fill")
+            Text(difficulty.rawValue)
+        }
+        .font(.caption.weight(.medium))
+        .foregroundStyle(Color(hex: difficulty.color))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color(hex: difficulty.color).opacity(0.15))
+        .clipShape(Capsule())
+    }
+}
+
 struct GamePlayerView: View {
-    let game: GameItem
+    let game: Game
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
         ZStack {
-            game.color.opacity(0.3).ignoresSafeArea()
+            Color(hex: game.color).opacity(0.3).ignoresSafeArea()
 
             VStack(spacing: 20) {
                 HStack {
@@ -247,25 +257,38 @@ struct GamePlayerView: View {
 
                 Spacer()
 
-                VStack(spacing: 12) {
-                    Text(game.emoji)
-                        .font(.system(size: 100))
-
-                    Text("游戏加载中...")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
-
-                    Text("Web/Unity游戏渲染区域")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                        .padding()
-                        .background(Color.black.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                if appState.isUnlocked {
+                    if game.gameUrl.isEmpty {
+                        VStack(spacing: 12) {
+                            Text(game.emoji)
+                                .font(.system(size: 100))
+                            Text("游戏加载中...")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+                            Text("Web游戏即将上线")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                        }
+                    } else {
+                        // WebView would load game.gameUrl here
+                        Text("游戏界面")
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    VStack(spacing: 16) {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 60))
+                            .foregroundStyle(.secondary)
+                        Text("解锁完整版后游玩")
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Spacer()
 
-                Text("提示：游戏需解锁完整版")
+                Text("提示：完整版包含全部游戏")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(.bottom, 20)
@@ -274,7 +297,34 @@ struct GamePlayerView: View {
     }
 }
 
+// Color hex extension
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3:
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6:
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8:
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 0, 0, 0)
+        }
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue: Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
 #Preview {
     GamesView()
-        .environmentObject(AppState())
+        .environmentObject(AppState.shared)
 }
