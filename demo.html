@@ -616,8 +616,8 @@ function closeDetail() {
 }
 
 function playGame() {
-  showLoading('游戏加载中...');
-  setTimeout(()=>{ hideLoading(); showToast('游戏演示模式'); }, 1500);
+  // Open the actual game file in a new tab
+  window.open('game-runner.html', '_blank');
 }
 
 // ======== PET ========
