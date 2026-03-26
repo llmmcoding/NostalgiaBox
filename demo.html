@@ -2,515 +2,336 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>⏰ 时光机 — 怀旧杀时间神器</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时光机 NostalgiaBox</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-:root {
-  --primary: #FF6B6B;
-  --primary2: #FF8E53;
-  --text: #1a1a2e;
-  --text2: #666;
-  --text3: #999;
-}
-body {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
-}
-.header-bar { color: rgba(255,255,255,0.5); font-size: 12px; margin-bottom: 14px; text-align: center; letter-spacing: 1px; }
-
-.phone {
-  width: 100%; max-width: 340px; height: 700px;
-  background: #000; border-radius: 44px; padding: 12px;
-  box-shadow: 0 0 80px rgba(255,107,107,0.15), 0 25px 80px rgba(0,0,0,0.5);
-}
-.phone-screen {
-  width: 100%; height: 100%;
-  background: #f5f5f7; border-radius: 34px; overflow: hidden; position: relative;
-}
-
-.dynamic-island {
-  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-  width: 100px; height: 28px; background: #000; border-radius: 20px; z-index: 30;
-}
-.status-bar {
-  position: absolute; top: 18px; left: 0; right: 0;
-  height: 44px; display: flex; align-items: flex-end; justify-content: space-between;
-  padding: 0 28px 8px; font-size: 13px; font-weight: 700; color: #000; z-index: 20;
-}
-.time { letter-spacing: 0.5px; }
-.icons { display: flex; gap: 4px; font-size: 14px; }
-
-.screen {
-  position: absolute;
-  top: 60px; left: 0; right: 0; bottom: 84px;
-  overflow-y: auto; overflow-x: hidden;
-}
-.screen::-webkit-scrollbar { display: none; }
-
-/* Tab Bar */
-.tab-bar {
-  position: absolute; bottom: 0; left: 0; right: 0; height: 84px;
-  background: rgba(255,255,255,0.97); backdrop-filter: saturate(180%) blur(20px);
-  display: flex; align-items: flex-start; justify-content: space-around;
-  padding-top: 8px;
-  border-top: 0.5px solid rgba(0,0,0,0.07);
-}
-.tab-item {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  color: var(--text3); font-size: 10px; cursor: pointer;
-  padding: 4px 10px; transition: all 0.2s;
-}
-.tab-item.active { color: var(--primary); }
-.tab-item .icon { font-size: 22px; line-height: 1; }
-
-/* ====== ONBOARDING ====== */
-.onboarding {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: #fff; z-index: 50; display: flex; flex-direction: column;
-}
-.ob-slides { flex: 1; position: relative; overflow: hidden; }
-.ob-slide {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 12px; padding: 40px 32px; text-align: center;
-  opacity: 0; transform: translateX(100%); transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
-}
-.ob-slide.active { opacity: 1; transform: translateX(0); }
-.ob-emoji { font-size: 88px; }
-.ob-title { font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
-.ob-subtitle { font-size: 16px; color: var(--text2); }
-.ob-desc { font-size: 14px; color: var(--text3); line-height: 1.7; max-width: 260px; }
-.ob-dots { display: flex; gap: 6px; justify-content: center; padding: 14px 0; }
-.ob-dot { width: 6px; height: 6px; border-radius: 50%; background: #e0e0e0; transition: all 0.3s; }
-.ob-dot.active { width: 20px; border-radius: 3px; background: var(--primary); }
-.ob-footer { padding: 12px 32px 36px; display: flex; gap: 12px; }
-.ob-btn { flex: 1; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; }
-.ob-btn.skip { background: #f0f0f5; color: var(--text3); }
-.ob-btn.next { background: var(--primary); color: #fff; }
-.ob-btn:active { transform: scale(0.97); }
-
-/* ====== HOME ====== */
-.home-screen { background: #fff; }
-.home-header { padding: 20px 20px 10px; text-align: center; }
-.home-logo { font-size: 26px; letter-spacing: 4px; }
-.home-tagline { font-size: 12px; color: var(--text3); margin-top: 4px; }
-
-.paywall-banner {
-  margin: 0 16px 14px; padding: 14px 16px;
-  background: linear-gradient(135deg, var(--primary), var(--primary2));
-  border-radius: 16px; display: flex; align-items: center; justify-content: space-between;
-  cursor: pointer; animation: bannerGlow 2.5s ease-in-out infinite alternate;
-}
-@keyframes bannerGlow {
-  from { box-shadow: 0 4px 20px rgba(255,107,107,0.25); }
-  to   { box-shadow: 0 4px 32px rgba(255,107,107,0.55); }
-}
-.paywall-banner:active { transform: scale(0.98); }
-.paywall-banner .left { color: #fff; }
-.paywall-banner .t { font-size: 14px; font-weight: 800; }
-.paywall-banner .s { font-size: 11px; opacity: 0.85; margin-top: 2px; }
-.paywall-banner .right { color: #fff; font-size: 18px; font-weight: 900; background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; }
-
-.section-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 8px; }
-.section-title { font-size: 15px; font-weight: 700; color: var(--text); }
-
-.daily-card {
-  margin: 0 16px 12px; padding: 14px;
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  border-radius: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer;
-}
-.daily-card:active { transform: scale(0.98); }
-.daily-emoji { font-size: 40px; flex-shrink: 0; }
-.daily-title { font-size: 14px; font-weight: 700; color: #92400e; }
-.daily-year { font-size: 11px; color: #b45309; margin-top: 2px; }
-.daily-desc { font-size: 12px; color: #d97706; margin-top: 4px; line-height: 1.5; }
-
-.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; }
-.qcard {
-  border-radius: 16px; padding: 16px 14px; cursor: pointer; transition: transform 0.15s;
-  position: relative; overflow: hidden;
-}
-.qcard:active { transform: scale(0.96); }
-.qcard .bg { position: absolute; inset: 0; opacity: 0.12; }
-.qcard:nth-child(1) .bg { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
-.qcard:nth-child(2) .bg { background: linear-gradient(135deg, #60a5fa, #2563eb); }
-.qcard:nth-child(3) .bg { background: linear-gradient(135deg, #f472b6, #db2777); }
-.qcard:nth-child(4) .bg { background: linear-gradient(135deg, #fb923c, #ea580c); }
-.qcard .emoji { font-size: 32px; margin-bottom: 8px; position: relative; }
-.qcard .title { font-size: 13px; font-weight: 700; color: var(--text); position: relative; }
-.qcard .sub { font-size: 10px; color: var(--text3); margin-top: 2px; position: relative; }
-
-.quote {
-  margin: 14px 16px; background: #f9f9fb; border-radius: 14px;
-  padding: 14px; font-size: 13px; color: var(--text3); font-style: italic;
-  text-align: center; line-height: 1.8; border-left: 3px solid var(--primary);
-}
-
-/* ====== PET ====== */
-.pet-screen { background: #fff; }
-.pet-main { display: flex; flex-direction: column; align-items: center; padding: 20px 0 0; }
-.pet-avatar {
-  width: 150px; height: 150px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 88px; cursor: pointer; transition: transform 0.15s;
-  position: relative;
-}
-.pet-avatar:active { transform: scale(0.94); }
-.pet-mood { font-size: 14px; color: var(--text2); margin-top: 10px; }
-.pet-name { font-size: 20px; font-weight: 800; color: var(--text); margin-top: 4px; cursor: pointer; }
-
-.pet-stats { width: 100%; padding: 16px 24px; }
-.stat-row { margin-bottom: 12px; }
-.stat-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text3); margin-bottom: 5px; }
-.stat-bar { height: 8px; background: #f0f0f5; border-radius: 4px; overflow: hidden; }
-.stat-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-
-.pet-actions { display: flex; gap: 16px; justify-content: center; padding: 12px 0 20px; }
-.pet-action { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
-.pet-action:active .pet-action-btn { transform: scale(0.9); }
-.pet-action-btn { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.15s; }
-.pet-action-label { font-size: 11px; color: var(--text3); }
-
-/* ====== GAMES ====== */
-.games-screen { background: #fff; }
-.games-header { padding: 14px 16px 10px; font-size: 20px; font-weight: 800; color: var(--text); }
-.games-tabs { display: flex; gap: 6px; padding: 0 16px 10px; overflow-x: auto; scrollbar-width: none; }
-.games-tabs::-webkit-scrollbar { display: none; }
-.tab-chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; background: #f0f0f5; color: var(--text2); transition: all 0.2s; flex-shrink: 0; }
-.tab-chip.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(255,107,107,0.35); }
-
-.games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 4px 16px 16px; }
-.game-card {
-  border-radius: 14px; overflow: hidden; background: #fafafa;
-  cursor: pointer; transition: transform 0.15s; border: 0.5px solid rgba(0,0,0,0.05);
-}
-.game-card:active { transform: scale(0.97); }
-.game-thumb { height: 90px; display: flex; align-items: center; justify-content: center; font-size: 42px; }
-.game-info { padding: 10px 12px 12px; }
-.game-name { font-size: 13px; font-weight: 700; color: var(--text); }
-.game-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
-.game-cat { font-size: 10px; color: var(--text3); }
-.game-diff { font-size: 10px; font-weight: 600; }
-
-/* ====== PLAYER ====== */
-.player-screen { background: #fff; }
-.player-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 12px; padding: 20px; }
-.player-emoji { font-size: 80px; animation: floatAnim 3s ease-in-out infinite; }
-@keyframes floatAnim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-.player-title { font-size: 20px; font-weight: 800; color: var(--text); }
-.player-sub { font-size: 12px; color: var(--text3); text-align: center; line-height: 1.7; }
-.player-formats { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 4px; }
-.format-tag { font-size: 11px; padding: 3px 9px; background: rgba(255,107,107,0.1); color: var(--primary); border-radius: 12px; font-weight: 600; }
-.player-btn { background: var(--primary); color: #fff; border: none; padding: 13px 28px; border-radius: 25px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; box-shadow: 0 4px 18px rgba(255,107,107,0.4); transition: transform 0.15s; }
-.player-btn:active { transform: scale(0.96); }
-
-/* ====== SETTINGS ====== */
-.settings-screen { background: #fff; }
-.settings-header { padding: 14px 16px 12px; font-size: 20px; font-weight: 800; color: var(--text); }
-.settings-section-title { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 16px 4px; }
-.settings-item { display: flex; align-items: center; padding: 13px 16px; cursor: pointer; transition: background 0.15s; }
-.settings-item:active { background: rgba(0,0,0,0.04); }
-.settings-item .sicon { font-size: 20px; margin-right: 12px; width: 28px; text-align: center; }
-.settings-item .stext { font-size: 15px; color: var(--text); flex: 1; }
-.settings-item .svalue { font-size: 13px; color: var(--text3); margin-right: 6px; }
-.settings-item .sarrow { font-size: 16px; color: #d1d5db; }
-.settings-item .badge { background: var(--primary); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-right: 8px; }
-.settings-item .badge.green { background: #34c759; }
-.settings-divider { height: 0.5px; background: #f0f0f0; margin: 0 16px; }
-
-/* ====== DETAIL OVERLAY ====== */
-.detail-overlay {
-  position: absolute; inset: 0; background: #fff;
-  transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); z-index: 25;
-  display: flex; flex-direction: column;
-}
-.detail-overlay.show { transform: translateX(0); }
-.detail-hero { height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; position: relative; }
-.detail-emoji { font-size: 100px; }
-.detail-hero h3 { font-size: 22px; font-weight: 800; color: #fff; }
-.detail-tags { display: flex; gap: 8px; }
-.detail-tag { font-size: 12px; padding: 4px 12px; background: rgba(255,255,255,0.25); border-radius: 20px; color: #fff; font-weight: 600; }
-.detail-back { position: absolute; top: 20px; left: 16px; width: 36px; height: 36px; background: rgba(255,255,255,0.95); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; backdrop-filter: blur(10px); z-index: 30; pointer-events: auto; }
-.detail-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
-.detail-desc { font-size: 14px; color: var(--text2); line-height: 1.8; }
-.detail-footer { padding: 12px 20px 32px; }
-.detail-play { width: 100%; background: var(--primary); color: #fff; border: none; padding: 15px; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(255,107,107,0.4); transition: transform 0.15s; }
-.detail-play:active { transform: scale(0.97); }
-
-/* ====== LOADING ====== */
-.loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.93); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 40; }
-.loading-overlay.show { opacity: 1; pointer-events: auto; }
-.spinner { width: 44px; height: 44px; border: 3px solid #f0f0f5; border-top-color: var(--primary); border-radius: 50%; animation: spinAnim 0.8s linear infinite; }
-@keyframes spinAnim { to{transform:rotate(360deg)} }
-.loading-text { font-size: 14px; color: var(--text3); }
-
-/* ====== PAYWALL SHEET ====== */
-.paywall-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); display: flex; align-items: flex-end; z-index: 35; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-.paywall-overlay.show { opacity: 1; pointer-events: auto; }
-.paywall-sheet { background: #fff; border-radius: 24px 24px 0 0; padding: 24px 24px 40px; width: 100%; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); position: relative; }
-.paywall-overlay.show .paywall-sheet { transform: translateY(0); }
-.pw-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 0 auto 20px; }
-.pw-emoji { font-size: 56px; text-align: center; margin-bottom: 8px; }
-.pw-title { font-size: 20px; font-weight: 800; text-align: center; color: var(--text); }
-.pw-features { margin: 16px 0; }
-.pw-feature { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 14px; color: var(--text2); }
-.pw-feature .icon { font-size: 18px; }
-.pw-feature .check { color: #34c759; }
-.pw-price { background: linear-gradient(135deg, var(--primary), var(--primary2)); color: #fff; text-align: center; padding: 14px; border-radius: 14px; font-size: 18px; font-weight: 800; cursor: pointer; margin-bottom: 8px; }
-.pw-restore { text-align: center; font-size: 12px; color: var(--text3); cursor: pointer; }
-.pw-note { text-align: center; font-size: 11px; color: var(--text3); margin-top: 8px; }
-
-/* ====== GAME IFRAME ====== */
-#gameFrame {
-  position: absolute;
-  top: 60px; left: 0; right: 0; bottom: 84px;
-  border: none;
-  background: #000;
-  display: none;
-  z-index: 25;
-}
-#gameFrame.show { display: block; }
-#gameBackBtn {
-  position: absolute;
-  top: 8px; left: 12px;
-  background: rgba(255,255,255,0.9);
-  border: none;
-  border-radius: 50%;
-  width: 36px; height: 36px;
-  font-size: 16px;
-  cursor: pointer;
-  z-index: 30;
-  display: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-#gameBackBtn.show { display: flex; align-items: center; justify-content: center; }
-
-/* ====== TOAST ====== */
-.toast { position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0,0,0,0.75); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 45; }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-.caption { color: rgba(255,255,255,0.4); font-size: 12px; margin-top: 16px; text-align: center; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;font-family:-apple-system,sans-serif}
+.hint{color:rgba(255,255,255,.4);font-size:11px;margin-bottom:12px;text-align:center}
+.phone{width:360px;height:720px;background:#000;border-radius:44px;padding:12px;box-shadow:0 0 60px rgba(255,107,107,.15),0 20px 60px rgba(0,0,0,.5);position:relative;overflow:hidden}
+.ps{width:100%;height:100%;background:#f5f5f7;border-radius:36px;overflow:hidden;position:relative}
+.di{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:110px;height:30px;background:#000;border-radius:22px;z-index:30}
+.sb{position:absolute;top:20px;left:0;right:0;height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 28px 8px;font-size:13px;font-weight:700;color:#000;z-index:20}
+.time{letter-spacing:.5px}
+.icons{display:flex;gap:4px;font-size:14px}
+.screen{position:absolute;top:60px;left:0;right:0;bottom:84px;overflow-y:auto}
+.tab-bar{position:absolute;bottom:0;left:0;right:0;height:84px;background:rgba(255,255,255,.97);backdrop-filter:saturate(180%) blur(20px);display:flex;align-items:flex-start;justify-content:space-around;padding-top:8px;border-top:.5px solid rgba(0,0,0,.07);z-index:10}
+.tab-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:#999;font-size:10px;cursor:pointer;padding:4px 10px;transition:all .2s}
+.tab-item.active{color:#FF6B6B}
+.tab-item .icon{font-size:22px}
+.home{background:#fff}
+.pad16{padding:20px 16px 10px;text-align:center}
+.logo{font-size:26px;letter-spacing:4px}
+.tag{font-size:11px;color:#999;margin-top:3px}
+.banner{margin:0 16px 14px;padding:14px 16px;background:linear-gradient(135deg,#FF6B6B,#FF8E53);border-radius:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;animation:glow 2.5s ease-in-out infinite alternate}
+@keyframes glow{from{box-shadow:0 4px 20px rgba(255,107,107,.2)}to{box-shadow:0 4px 30px rgba(255,107,107,.5)}}
+.banner:active{transform:scale(.98)}
+.bl{color:#fff}
+.bt{font-size:14px;font-weight:800}
+.bs{font-size:11px;opacity:.85;margin-top:2px}
+.br{color:#fff;font-size:18px;font-weight:900;background:rgba(255,255,255,.2);padding:6px 12px;border-radius:20px}
+.sh{padding:14px 16px 6px;display:flex;justify-content:space-between;align-items:center}
+.st{font-size:14px;font-weight:700}
+.sm{font-size:11px;color:#FF6B6B}
+.daily{margin:0 16px 12px;padding:14px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.daily:active{transform:scale(.98)}
+.dE{font-size:40px;flex-shrink:0}
+.dTi{font-size:14px;font-weight:700;color:#92400e}
+.dYr{font-size:11px;color:#b45309;margin-top:2px}
+.dDs{font-size:12px;color:#d97706;margin-top:4px;line-height:1.5}
+.qg{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px}
+.qc{border-radius:16px;padding:16px 14px;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s}
+.qc:active{transform:scale(.96)}
+.bg{position:absolute;inset:0;opacity:.12}
+.qc:nth-child(1) .bg{background:linear-gradient(135deg,#a78bfa,#7c3aed)}
+.qc:nth-child(2) .bg{background:linear-gradient(135deg,#60a5fa,#2563eb)}
+.qc:nth-child(3) .bg{background:linear-gradient(135deg,#f472b6,#db2777)}
+.qc:nth-child(4) .bg{background:linear-gradient(135deg,#fb923c,#ea580c)}
+.qcE{font-size:32px;margin-bottom:8px;position:relative}
+.qcT{font-size:13px;font-weight:700;position:relative}
+.qcS{font-size:10px;color:#999;margin-top:2px;position:relative}
+.quote{margin:14px 16px;background:#f9f9fb;border-radius:14px;padding:14px;font-size:13px;color:#999;font-style:italic;text-align:center;line-height:1.8;border-left:3px solid #FF6B6B}
+.pet{background:#fff}
+.pc{display:flex;flex-direction:column;align-items:center;padding:20px 0 0}
+.pA{width:140px;height:140px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:82px;cursor:pointer;transition:transform .15s}
+.pA:active{transform:scale(.94)}
+.pM{font-size:14px;color:#666;margin-top:10px}
+.pN{font-size:20px;font-weight:800;color:#1a1a2e;margin-top:4px;cursor:pointer}
+.pSt{width:100%;padding:16px 24px}
+.sR{margin-bottom:12px}
+.sL{display:flex;justify-content:space-between;font-size:12px;color:#999;margin-bottom:5px}
+.sB{height:8px;background:#f0f0f5;border-radius:4px;overflow:hidden}
+.sF{height:100%;border-radius:4px;transition:width .5s}
+.pAC{display:flex;gap:16px;justify-content:center;padding:12px 0 20px}
+.pA2{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.pA2:active .pAB{transform:scale(.9)}
+.pAB{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;transition:transform .15s}
+.pAL{font-size:11px;color:#999}
+.games{background:#fff}
+.gH{padding:14px 16px 10px;font-size:20px;font-weight:800}
+.tabs{display:flex;gap:6px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none}
+.chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;background:#f0f0f5;color:#666;transition:all .2s;flex-shrink:0}
+.chip.active{background:#FF6B6B;color:#fff;box-shadow:0 2px 8px rgba(255,107,107,.35)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:4px 16px 16px}
+.gc{border-radius:14px;overflow:hidden;background:#fafafa;cursor:pointer;transition:transform .15s;border:.5px solid rgba(0,0,0,.05)}
+.gc:active{transform:scale(.97)}
+.gT{height:90px;display:flex;align-items:center;justify-content:center;font-size:42px}
+.gI{padding:10px 12px 12px}
+.gN{font-size:13px;font-weight:700}
+.gM{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.gC{font-size:10px;color:#999}
+.player{background:#fff}
+.pE{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;padding:20px}
+.pEA{font-size:80px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.pT{font-size:20px;font-weight:800;color:#1a1a2e}
+.pS{font-size:12px;color:#999;text-align:center;line-height:1.7}
+.pF{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:4px}
+.ft{font-size:11px;padding:3px 9px;background:rgba(255,107,107,.1);color:#FF6B6B;border-radius:12px;font-weight:600}
+.pBtn{background:#FF6B6B;color:#fff;border:none;padding:13px 28px;border-radius:25px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;box-shadow:0 4px 18px rgba(255,107,107,.4);transition:transform .15s}
+.pBtn:active{transform:scale(.96)}
+.settings{background:#fff}
+.sH{padding:14px 16px 12px;font-size:20px;font-weight:800}
+.sti{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.5px;padding:8px 16px 4px}
+.item{display:flex;align-items:center;padding:13px 16px;cursor:pointer}
+.item:active{background:rgba(0,0,0,.04)}
+.si{font-size:20px;margin-right:12px;width:28px;text-align:center}
+.st{font-size:15px;color:#1a1a2e;flex:1}
+.sv{font-size:13px;color:#999;margin-right:6px}
+.sa{font-size:16px;color:#d1d5db}
+.badge{background:#FF6B6B;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;margin-right:8px}
+.div{height:.5px;background:#f0f0f0;margin:0 16px}
+.detail{position:absolute;inset:0;background:#fff;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:25;display:flex;flex-direction:column}
+.detail.show{transform:translateX(0)}
+.dH{height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative}
+.dBk{position:absolute;top:20px;left:16px;width:36px;height:36px;background:rgba(255,255,255,.95);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;backdrop-filter:blur(10px);z-index:2}
+.dEmoji{font-size:100px}
+.dH h3{font-size:22px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.15)}
+.dTags{display:flex;gap:8px}
+.dTag{font-size:12px;padding:4px 12px;background:rgba(255,255,255,.25);border-radius:20px;color:#fff;font-weight:600}
+.dB{flex:1;overflow-y:auto;padding:16px 20px}
+.dD{font-size:14px;color:#666;line-height:1.8}
+.dF{padding:12px 20px 32px}
+.dPlay{width:100%;background:#FF6B6B;color:#fff;border:none;padding:15px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,107,.4);transition:transform .15s}
+.dPlay:active{transform:scale(.97)}
+.loading{position:absolute;inset:0;background:rgba(255,255,255,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:40}
+.loading.show{opacity:1;pointer-events:auto}
+.spin{width:44px;height:44px;border:3px solid #f0f0f5;border-top-color:#FF6B6B;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loadT{font-size:14px;color:#999}
+.paywall{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:flex;align-items:flex-end;z-index:35;opacity:0;pointer-events:none;transition:opacity .3s}
+.paywall.show{opacity:1;pointer-events:auto}
+.paywall.show .ps{transform:translateY(0)}
+.ps{background:#fff;border-radius:24px 24px 0 0;padding:24px 24px 40px;width:100%;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.handle{width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px}
+.pwE{font-size:56px;text-align:center;margin-bottom:8px}
+.pwTitle{font-size:20px;font-weight:800;text-align:center}
+.pwFeat{margin:16px 0}
+.pfr{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:14px;color:#666}
+.pfrCheck{color:#34c759;margin-left:auto}
+.pwPrice{background:linear-gradient(135deg,#FF6B6B,#FF8E53);color:#fff;text-align:center;padding:14px;border-radius:14px;font-size:18px;font-weight:800;cursor:pointer;margin-bottom:8px}
+.pwRestore{text-align:center;font-size:12px;color:#999;cursor:pointer}
+.pwNote{text-align:center;font-size:11px;color:#999;margin-top:8px}
+.toast{position:absolute;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.75);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:45}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ob{position:absolute;inset:0;background:#fff;z-index:50;display:flex;flex-direction:column}
+.obSlides{flex:1;position:relative;overflow:hidden}
+.obSlide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px 32px;text-align:center;opacity:0;transform:translateX(100%);transition:all .4s cubic-bezier(.4,0,.2,1)}
+.obSlide.active{opacity:1;transform:translateX(0)}
+.obEmoji{font-size:88px}
+.obTitle{font-size:26px;font-weight:800;color:#1a1a2e;letter-spacing:-.5px}
+.obSub{font-size:16px;color:#666}
+.obDesc{font-size:14px;color:#999;line-height:1.7;max-width:260px}
+.obDots{display:flex;gap:6px;justify-content:center;padding:14px 0}
+.obDot{width:6px;height:6px;border-radius:50%;background:#e0e0e0;transition:all .3s}
+.obDot.active{width:20px;border-radius:3px;background:#FF6B6B}
+.obFooter{padding:12px 32px 36px;display:flex;gap:12px}
+.obBtn{flex:1;padding:14px;border-radius:14px;font-size:15px;font-weight:700;border:none;cursor:pointer}
+.obBtn.skip{background:#f0f0f5;color:#999}
+.obBtn.next{background:#FF6B6B;color:#fff}
 </style>
 </head>
 <body>
-
-<div class="header-bar">👆 点击各模块体验完整交互流程</div>
-
+<p class="hint">时光机 - 打开 Games/ 目录下任意游戏直接游玩</p>
 <div class="phone">
-  <div class="phone-screen">
-    <div class="dynamic-island"></div>
-    <div class="status-bar">
+  <div class="ps">
+    <div class="di"></div>
+    <div class="sb">
       <span class="time" id="clock">9:41</span>
       <div class="icons"><span>📶</span><span>🔋</span></div>
     </div>
 
-    <!-- ONBOARDING -->
-    <div class="onboarding" id="onboarding" style="display:none">
-      <div class="ob-slides">
-        <div class="ob-slide active" data-idx="0">
-          <div class="ob-emoji">⏰</div><div class="ob-title">欢迎来到时光机</div>
-          <div class="ob-subtitle">带你穿越回青春</div>
-          <div class="ob-desc">那些年，我们没有智能手机<br>但有最纯粹的快乐</div>
+    <div class="ob" id="onboarding" style="display:none">
+      <div class="obSlides">
+        <div class="obSlide active" data-idx="0">
+          <div class="obEmoji">⏰</div>
+          <div class="obTitle">欢迎来到时光机</div>
+          <div class="obSub">带你穿越回青春</div>
+          <div class="obDesc">那些年，我们没有智能手机<br>但有最纯粹的快乐</div>
         </div>
-        <div class="ob-slide" data-idx="1">
-          <div class="ob-emoji">🎮</div><div class="ob-title">经典游戏</div>
-          <div class="ob-subtitle">魔塔·RPG·跑酷</div>
-          <div class="ob-desc">像素勇者、魔塔大陆、2048<br>每一个都是一代人的回忆</div>
+        <div class="obSlide" data-idx="1">
+          <div class="obEmoji">🎮</div>
+          <div class="obTitle">经典游戏</div>
+          <div class="obSub">魔塔·RPG·跑酷</div>
+          <div class="obDesc">像素勇者、魔塔大陆、2048<br>每一个都是一代人的回忆</div>
         </div>
-        <div class="ob-slide" data-idx="2">
-          <div class="ob-emoji">🐣</div><div class="ob-title">电子宠物</div>
-          <div class="ob-subtitle">当年电子鸡的复刻</div>
-          <div class="ob-desc">喂食、玩耍、陪它睡觉<br>就像回到童年一样</div>
+        <div class="obSlide" data-idx="2">
+          <div class="obEmoji">🐣</div>
+          <div class="obTitle">电子宠物</div>
+          <div class="obSub">当年电子鸡的复刻</div>
+          <div class="obDesc">喂食、玩耍、陪它睡觉<br>就像回到童年一样</div>
         </div>
-        <div class="ob-slide" data-idx="3">
-          <div class="ob-emoji">📻</div><div class="ob-title">复古播放器</div>
-          <div class="ob-subtitle">万能音视频</div>
-          <div class="ob-desc">支持所有主流格式<br>那些年的MV和动漫随时播放</div>
+        <div class="obSlide" data-idx="3">
+          <div class="obEmoji">📻</div>
+          <div class="obTitle">复古播放器</div>
+          <div class="obSub">万能音视频</div>
+          <div class="obDesc">支持所有主流格式<br>那些年的MV和动漫随时播放</div>
         </div>
-        <div class="ob-slide" data-idx="4">
-          <div class="ob-emoji">🚀</div><div class="ob-title">准备好了吗？</div>
-          <div class="ob-subtitle">一起穿越吧</div>
-          <div class="ob-desc">点击开始，开启你的时光之旅</div>
+        <div class="obSlide" data-idx="4">
+          <div class="obEmoji">🚀</div>
+          <div class="obTitle">准备好了吗？</div>
+          <div class="obSub">一起穿越吧</div>
+          <div class="obDesc">点击开始，开启你的时光之旅</div>
         </div>
       </div>
-      <div class="ob-dots" id="obDots">
-        <div class="ob-dot active" data-d="0"></div><div class="ob-dot" data-d="1"></div>
-        <div class="ob-dot" data-d="2"></div><div class="ob-dot" data-d="3"></div><div class="ob-dot" data-d="4"></div>
+      <div class="obDots">
+        <div class="obDot active" data-d="0"></div>
+        <div class="obDot" data-d="1"></div>
+        <div class="obDot" data-d="2"></div>
+        <div class="obDot" data-d="3"></div>
+        <div class="obDot" data-d="4"></div>
       </div>
-      <div class="ob-footer">
-        <button class="ob-btn skip" id="obSkip">跳过</button>
-        <button class="ob-btn next" id="obNext">继续</button>
+      <div class="obFooter">
+        <button class="obBtn skip" id="obSkip">跳过</button>
+        <button class="obBtn next" id="obNext">继续</button>
       </div>
     </div>
 
-    <!-- MAIN SCREEN -->
     <div class="screen" id="mainScreen">
 
-      <!-- HOME -->
-      <div class="home-screen screen-page" id="homePage">
-        <div class="home-header"><div class="home-logo">⏰ 时光机</div><div class="home-tagline">带你穿越回青春</div></div>
-        <div class="paywall-banner" onclick="showPaywall()">
-          <div class="left"><div class="t">🌟 解锁全部内容</div><div class="s">一次购买，终身怀旧</div></div>
-          <div class="right">$2.99</div>
+      <div class="home" id="homePage">
+        <div class="pad16">
+          <div class="logo">⏰ 时光机</div>
+          <div class="tag">带你穿越回青春</div>
         </div>
-        <div class="section-header"><div class="section-title">📅 历史上的今天</div></div>
-        <div class="daily-card" id="dailyCard" onclick="loadDailyContent()">
-          <div class="daily-emoji" id="dailyEmoji">📅</div>
-          <div><div class="daily-title" id="dailyTitle">加载中...</div><div class="daily-year" id="dailyYear"></div><div class="daily-desc" id="dailyDesc"></div></div>
+        <div class="banner" onclick="showPaywall()">
+          <div class="bl">
+            <div class="bt">🌟 解锁全部内容</div>
+            <div class="bs">一次购买，终身怀旧</div>
+          </div>
+          <div class="br">$2.99</div>
         </div>
-        <div class="section-header"><div class="section-title">⚡ 快速开始</div></div>
-        <div class="quick-grid">
-          <div class="qcard" onclick="switchTab(2)"><div class="bg"></div><div class="emoji">🎮</div><div class="title">像素游戏</div><div class="sub">魔塔·RPG·跑酷</div></div>
-          <div class="qcard" onclick="switchTab(3)"><div class="bg"></div><div class="emoji">📻</div><div class="title">复古播放器</div><div class="sub">万能音视频</div></div>
-          <div class="qcard" onclick="switchTab(1)"><div class="bg"></div><div class="emoji">🐣</div><div class="title">电子宠物</div><div class="sub">当年电子鸡</div></div>
-          <div class="qcard" onclick="showToast('日历功能即将上线')"><div class="bg"></div><div class="emoji">📅</div><div class="title">怀旧日历</div><div class="sub">2000年代今天</div></div>
+        <div class="sh"><div class="st">📅 历史上的今天</div></div>
+        <div class="daily" onclick="loadDaily()">
+          <div class="dE" id="dailyEmoji">📅</div>
+          <div>
+            <div class="dTi" id="dailyTitle">加载中...</div>
+            <div class="dYr" id="dailyYear"></div>
+            <div class="dDs" id="dailyDesc"></div>
+          </div>
+        </div>
+        <div class="sh"><div class="st">⚡ 快速开始</div></div>
+        <div class="qg">
+          <div class="qc" onclick="switchTab(2)"><div class="bg"></div><div class="qcE">🎮</div><div class="qcT">像素游戏</div><div class="qcS">魔塔·RPG·跑酷</div></div>
+          <div class="qc" onclick="switchTab(3)"><div class="bg"></div><div class="qcE">📻</div><div class="qcT">复古播放器</div><div class="qcS">万能音视频</div></div>
+          <div class="qc" onclick="switchTab(1)"><div class="bg"></div><div class="qcE">🐣</div><div class="qcT">电子宠物</div><div class="qcS">当年电子鸡</div></div>
+          <div class="qc" onclick="showToast('日历功能即将上线')"><div class="bg"></div><div class="qcE">📅</div><div class="qcT">怀旧日历</div><div class="qcS">2000年代今天</div></div>
         </div>
         <div class="quote">"那些年，我们没有智能手机，<br>但我们有最纯粹的快乐。"</div>
       </div>
 
-      <!-- PET -->
-      <div class="pet-screen screen-page" id="petPage" style="display:none">
-        <div class="pet-main">
-          <div class="pet-avatar" id="petAvatar" style="background:rgba(255,183,77,0.2)" onclick="petDo('play')">
+      <div class="pet" id="petPage" style="display:none">
+        <div class="pc">
+          <div class="pA" id="pA" style="background:rgba(255,183,77,.2)" onclick="petDo('play')">
             <span id="petEmoji">🐣</span>
           </div>
-          <div class="pet-mood" id="petMood">😊 开心</div>
-          <div class="pet-name" onclick="renamePet()">小黄</div>
+          <div class="pM" id="petMood">😊 开心</div>
+          <div class="pN" id="petName" onclick="renamePet()">小黄</div>
         </div>
-        <div class="pet-stats">
-          <div class="stat-row">
-            <div class="stat-label"><span>饱腹感</span><span id="hVal">70%</span></div>
-            <div class="stat-bar"><div class="stat-fill" id="hBar" style="width:70%;background:#ff9500"></div></div>
+        <div class="pSt">
+          <div class="sR">
+            <div class="sL"><span>饱腹感</span><span id="hVal">70%</span></div>
+            <div class="sB"><div class="sF" id="hBar" style="width:70%;background:#ff9500"></div></div>
           </div>
-          <div class="stat-row">
-            <div class="stat-label"><span>快乐</span><span id="pVal">70%</span></div>
-            <div class="stat-bar"><div class="stat-fill" id="pBar" style="width:70%;background:#fbbf24"></div></div>
+          <div class="sR">
+            <div class="sL"><span>快乐</span><span id="pVal">70%</span></div>
+            <div class="sB"><div class="sF" id="pBar" style="width:70%;background:#fbbf24"></div></div>
           </div>
-          <div class="stat-row">
-            <div class="stat-label"><span>精力</span><span id="eVal">80%</span></div>
-            <div class="stat-bar"><div class="stat-fill" id="eBar" style="width:80%;background:#34d399"></div></div>
+          <div class="sR">
+            <div class="sL"><span>精力</span><span id="eVal">80%</span></div>
+            <div class="sB"><div class="sF" id="eBar" style="width:80%;background:#34d399"></div></div>
           </div>
         </div>
-        <div class="pet-actions">
-          <div class="pet-action" onclick="petDo('feed')"><div class="pet-action-btn" style="background:rgba(255,149,0,0.15)">🍞</div><div class="pet-action-label">喂食</div></div>
-          <div class="pet-action" onclick="petDo('play')"><div class="pet-action-btn" style="background:rgba(167,139,250,0.15)">🎮</div><div class="pet-action-label">玩耍</div></div>
-          <div class="pet-action" onclick="petDo('sleep')"><div class="pet-action-btn" style="background:rgba(96,165,250,0.15)">😴</div><div class="pet-action-label">睡觉</div></div>
+        <div class="pAC">
+          <div class="pA2" onclick="petDo('feed')"><div class="pAB" style="background:rgba(255,149,0,.15)">🍞</div><div class="pAL">喂食</div></div>
+          <div class="pA2" onclick="petDo('play')"><div class="pAB" style="background:rgba(167,139,250,.15)">🎮</div><div class="pAL">玩耍</div></div>
+          <div class="pA2" onclick="petDo('sleep')"><div class="pAB" style="background:rgba(96,165,250,.15)">😴</div><div class="pAL">睡觉</div></div>
         </div>
       </div>
 
-      <!-- GAMES -->
-      <div class="games-screen screen-page" id="gamesPage" style="display:none">
-        <div class="games-header">🎮 游戏</div>
-        <div class="games-tabs" id="gameTabs">
-          <div class="tab-chip active" onclick="filterGames(this, null)">🎯 全部</div>
-          <div class="tab-chip" onclick="filterGames(this, '魔塔')">🏰 魔塔</div>
-          <div class="tab-chip" onclick="filterGames(this, '像素RPG')">⚔️ RPG</div>
-          <div class="tab-chip" onclick="filterGames(this, '跑酷')">🏃 跑酷</div>
-          <div class="tab-chip" onclick="filterGames(this, '休闲益智')">🧩 休闲</div>
+      <div class="games" id="gamesPage" style="display:none">
+        <div class="gH">🎮 游戏</div>
+        <div class="tabs">
+          <div class="chip active" onclick="filterGames(this, null)">🎯 全部</div>
+          <div class="chip" onclick="filterGames(this, '魔塔')">🏰 魔塔</div>
+          <div class="chip" onclick="filterGames(this, '像素RPG')">⚔️ RPG</div>
+          <div class="chip" onclick="filterGames(this, '跑酷')">🏃 跑酷</div>
+          <div class="chip" onclick="filterGames(this, '休闲益智')">🧩 休闲</div>
         </div>
-        <div class="games-grid" id="gamesGrid"></div>
+        <div class="grid" id="gamesGrid"></div>
       </div>
 
-      <!-- PLAYER -->
-      <div class="player-screen screen-page" id="playerPage" style="display:none">
-        <div class="player-empty">
-          <div class="player-emoji">📻</div>
-          <div class="player-title">复古万能播放器</div>
-          <div class="player-sub">支持以下格式，选择本地文件即可播放</div>
-          <div class="player-formats">
-            <div class="format-tag">MP4</div><div class="format-tag">AVI</div>
-            <div class="format-tag">MP3</div><div class="format-tag">FLV</div>
-            <div class="format-tag">WMV</div><div class="format-tag">MKV</div>
-            <div class="format-tag">MOV</div><div class="format-tag">WAV</div>
+      <div class="player" id="playerPage" style="display:none">
+        <div class="pE">
+          <div class="pEA">📻</div>
+          <div class="pT">复古万能播放器</div>
+          <div class="pS">支持以下格式，选择本地文件即可播放</div>
+          <div class="pF">
+            <div class="ft">MP4</div><div class="ft">AVI</div><div class="ft">MP3</div><div class="ft">FLV</div>
+            <div class="ft">WMV</div><div class="ft">MKV</div><div class="ft">MOV</div><div class="ft">WAV</div>
           </div>
-          <button class="player-btn" onclick="showToast('播放器已就绪，请选择文件')">📂 选择本地文件</button>
+          <button class="pBtn" onclick="showToast('播放器已就绪')">📂 选择本地文件</button>
         </div>
       </div>
 
-      <!-- SETTINGS -->
-      <div class="settings-screen screen-page" id="settingsPage" style="display:none">
-        <div class="settings-header">⚙️ 设置</div>
-        <div class="settings-section-title">账号</div>
-        <div class="settings-item" onclick="showToast('Apple 登录')"><div class="sicon">🍎</div><div class="stext">Sign in with Apple</div><div class="sarrow">›</div></div>
-        <div class="settings-item" onclick="showPaywall()"><div class="sicon">🔒</div><div class="stext">解锁完整版</div><div class="badge">$2.99</div><div class="sarrow">›</div></div>
-        <div class="settings-divider"></div>
-        <div class="settings-section-title">外观</div>
-        <div class="settings-item"><div class="sicon">🌙</div><div class="stext">主题</div><div class="svalue">跟随系统</div><div class="sarrow">›</div></div>
-        <div class="settings-divider"></div>
-        <div class="settings-section-title">支持</div>
-        <div class="settings-item" onclick="showToast('联系客服')"><div class="sicon">💬</div><div class="stext">联系客服 / 反馈</div><div class="sarrow">›</div></div>
-        <div class="settings-item" onclick="showToast('正在恢复购买...')"><div class="sicon">🔄</div><div class="stext">恢复购买</div><div class="sarrow">›</div></div>
-        <div class="settings-divider"></div>
-        <div class="settings-section-title">法律</div>
-        <div class="settings-item"><div class="sicon">📄</div><div class="stext">隐私政策</div><div class="sarrow">›</div></div>
-        <div class="settings-item"><div class="sicon">📃</div><div class="stext">用户协议</div><div class="sarrow">›</div></div>
-        <div class="settings-divider"></div>
-        <div class="settings-section-title">关于</div>
-        <div class="settings-item"><div class="sicon">ℹ️</div><div class="stext">版本</div><div class="svalue">1.0.0 (1)</div></div>
-        <div class="settings-item" onclick="showToast('感谢您的支持！')"><div class="sicon">⭐</div><div class="stext">给我们评分</div><div class="sarrow">›</div></div>
+      <div class="settings" id="settingsPage" style="display:none">
+        <div class="sH">⚙️ 设置</div>
+        <div class="sti">账号</div>
+        <div class="item" onclick="showToast('Apple 登录')"><div class="si">🍎</div><div class="st">Sign in with Apple</div><div class="sa">›</div></div>
+        <div class="item" onclick="showPaywall()"><div class="si">🔒</div><div class="st">解锁完整版</div><div class="badge">$2.99</div><div class="sa">›</div></div>
+        <div class="div"></div>
+        <div class="sti">外观</div>
+        <div class="item"><div class="si">🌙</div><div class="st">主题</div><div class="sv">跟随系统</div><div class="sa">›</div></div>
+        <div class="div"></div>
+        <div class="sti">支持</div>
+        <div class="item" onclick="showToast('联系客服')"><div class="si">💬</div><div class="st">联系客服 / 反馈</div><div class="sa">›</div></div>
+        <div class="item" onclick="showToast('正在恢复购买...')"><div class="si">🔄</div><div class="st">恢复购买</div><div class="sa">›</div></div>
+        <div class="div"></div>
+        <div class="sti">法律</div>
+        <div class="item"><div class="si">📄</div><div class="st">隐私政策</div><div class="sa">›</div></div>
+        <div class="item"><div class="si">📃</div><div class="st">用户协议</div><div class="sa">›</div></div>
+        <div class="div"></div>
+        <div class="sti">关于</div>
+        <div class="item"><div class="si">ℹ️</div><div class="st">版本</div><div class="sv">1.0.0 (1)</div></div>
+        <div class="item" onclick="showToast('感谢您的支持！')"><div class="si">⭐</div><div class="st">给我们评分</div><div class="sa">›</div></div>
       </div>
     </div>
 
-    <!-- GAME DETAIL OVERLAY -->
-    <div class="detail-overlay" id="gameDetail">
-      <div class="detail-back" onclick="closeDetail()">✕</div>
-      <div class="detail-hero" id="detailHero">
-        <div class="detail-emoji" id="detailEmoji">🏰</div>
+    <div class="detail" id="gameDetail">
+      <div class="dBk" onclick="closeDetail()">✕</div>
+      <div class="dH">
+        <div class="dEmoji" id="detailEmoji">🏰</div>
         <h3 id="detailTitle">游戏名</h3>
-        <div class="detail-tags">
-          <div class="detail-tag" id="detailCat">分类</div>
-          <div class="detail-tag" id="detailDiff">难度</div>
+        <div class="dTags">
+          <div class="dTag" id="detailCat">分类</div>
+          <div class="dTag" id="detailDiff">难度</div>
         </div>
       </div>
-      <div class="detail-body">
-        <div class="detail-desc" id="detailDesc">游戏描述</div>
-      </div>
-      <div class="detail-footer">
-        <button class="detail-play" id="detailPlayBtn" onclick="playGame()">▶ 开始游戏</button>
-      </div>
+      <div class="dB"><div class="dD" id="detailDesc">游戏描述</div></div>
+      <div class="dF"><button class="dPlay" onclick="playGame()">▶ 开始游戏</button></div>
     </div>
 
-    <!-- LOADING OVERLAY -->
-    <div class="loading-overlay" id="loadingOverlay">
-      <div class="spinner"></div>
-      <div class="loading-text" id="loadingText">加载中...</div>
-    </div>
-
-    <!-- PAYWALL SHEET -->
-    <div class="paywall-overlay" id="paywallOverlay">
-      <div class="paywall-sheet">
-        <div class="pw-handle"></div>
-        <div class="pw-emoji">🌟</div>
-        <div class="pw-title">解锁时光机全部内容</div>
-        <div class="pw-features">
-          <div class="pw-feature"><span class="icon">🎮</span><span>全部游戏完整版</span><span class="check">✓</span></div>
-          <div class="pw-feature"><span class="icon">📻</span><span>高清播放器</span><span class="check">✓</span></div>
-          <div class="pw-feature"><span class="icon">🐣</span><span>电子宠物</span><span class="check">✓</span></div>
-          <div class="pw-feature"><span class="icon">📅</span><span>怀旧日历</span><span class="check">✓</span></div>
-          <div class="pw-feature"><span class="icon">🚫</span><span>无广告</span><span class="check">✓</span></div>
-        </div>
-        <div class="pw-price" onclick="showToast('购买流程演示完成')">¥18 解锁全部</div>
-        <div class="pw-restore" onclick="showToast('未找到购买记录')">恢复购买</div>
-        <div class="pw-note">一次购买，永久使用 · 支持恢复购买</div>
-      </div>
-    </div>
-
-    <!-- TOAST -->
-    <div class="toast" id="toast"></div>
-
-    <!-- Game Iframe -->
-    <button id="gameBackBtn" onclick="closeGameFrame()">✕</button>
-    <iframe id="gameFrame" allow="autoplay"></iframe>
-
-    <!-- Tab Bar -->
-    <div class="tab-bar">
+    <div class="tab-bar" id="tabBar">
       <div class="tab-item active" id="tab0" onclick="switchTab(0)"><div class="icon">🏠</div><div>首页</div></div>
       <div class="tab-item" id="tab1" onclick="switchTab(1)"><div class="icon">🐣</div><div>宠物</div></div>
       <div class="tab-item" id="tab2" onclick="switchTab(2)"><div class="icon">🎮</div><div>游戏</div></div>
@@ -518,265 +339,207 @@ body {
       <div class="tab-item" id="tab4" onclick="switchTab(4)"><div class="icon">⚙️</div><div>设置</div></div>
     </div>
 
+    <div class="loading" id="loadingOverlay">
+      <div class="spin"></div>
+      <div class="loadT" id="loadingText">加载中...</div>
+    </div>
+
+    <div class="paywall" id="paywallOverlay">
+      <div class="ps">
+        <div class="handle"></div>
+        <div class="pwE">🌟</div>
+        <div class="pwTitle">解锁时光机全部内容</div>
+        <div class="pwFeat">
+          <div class="pfr"><span>🎮</span><span>全部游戏完整版</span><span class="pfrCheck">✓</span></div>
+          <div class="pfr"><span>📻</span><span>高清播放器</span><span class="pfrCheck">✓</span></div>
+          <div class="pfr"><span>🐣</span><span>电子宠物</span><span class="pfrCheck">✓</span></div>
+          <div class="pfr"><span>📅</span><span>怀旧日历</span><span class="pfrCheck">✓</span></div>
+          <div class="pfr"><span>🚫</span><span>无广告</span><span class="pfrCheck">✓</span></div>
+        </div>
+        <div class="pwPrice" onclick="showToast('购买流程演示完成')">¥18 解锁全部</div>
+        <div class="pwRestore" onclick="showToast('未找到购买记录')">恢复购买</div>
+        <div class="pwNote">一次购买，永久使用 · 支持恢复购买</div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
   </div>
 </div>
 
 <script>
-const PAGES = ['homePage','petPage','gamesPage','playerPage','settingsPage'];
-const TABS = ['tab0','tab1','tab2','tab3','tab4'];
+var gameFileMap=['Games/game-molabel.html','Games/game-rpg.html','Games/game-runner.html','Games/game-puzzle.html','Games/game-darktower.html','Games/game-dragon.html','Games/game-blocks.html','Games/game-2048.html'];
+var currentGameIdx=0,obIdx=0,allGames=[],PAGES=['homePage','petPage','gamesPage','playerPage','settingsPage'],TABS=['tab0','tab1','tab2','tab3','tab4'];
 
-// ======== TAB SWITCH ========
-function switchTab(idx) {
-  PAGES.forEach((p,i) => {
-    document.getElementById(p).style.display = i===idx?'block':'none';
-    document.getElementById(TABS[i]).className = 'tab-item'+(i===idx?' active':'');
-  });
-  if(idx === 2) loadGames();
-  if(idx === 0) loadDaily();
+function switchTab(idx){
+  for(var i=0;i<PAGES.length;i++){
+    var p=document.getElementById(PAGES[i]),t=document.getElementById(TABS[i]);
+    p.style.display=i===idx?'block':'none';
+    t.className='tab-item'+(i===idx?' active':'');
+  }
+  if(idx===2)loadGames();
+  if(idx===0)loadDaily();
   closeDetail();
 }
 
-// ======== ONBOARDING ========
-let obIdx = 0;
-const obSlides = document.querySelectorAll('.ob-slide');
-const obDots = document.querySelectorAll('.ob-dot');
-
-function showObSlide(idx) {
-  obSlides.forEach((s,i) => s.classList.toggle('active',i===idx));
-  obDots.forEach((d,i) => d.classList.toggle('active',i===idx));
-  obIdx = idx;
-  document.getElementById('obNext').textContent = idx===4?'开始体验':'继续';
+function showObSlide(idx){
+  var slides=document.querySelectorAll('.obSlide'),dots=document.querySelectorAll('.obDot');
+  for(var i=0;i<slides.length;i++){
+    slides[i].classList.toggle('active',i===idx);
+    dots[i].classList.toggle('active',i===idx);
+  }
+  obIdx=idx;
+  document.getElementById('obNext').textContent=idx===4?'开始体验':'继续';
 }
-
-document.getElementById('obNext').onclick = () => {
-  if(obIdx<4) showObSlide(obIdx+1); else closeOb();
+document.getElementById('obNext').onclick=function(){
+  if(obIdx<4){showObSlide(obIdx+1);}else{closeOb();}
 };
-document.getElementById('obSkip').onclick = closeOb;
-
-function closeOb() {
-  document.getElementById('onboarding').style.display = 'none';
-  document.getElementById('mainScreen').style.display = 'block';
+document.getElementById('obSkip').onclick=closeOb;
+function closeOb(){
+  document.getElementById('onboarding').style.display='none';
+  document.getElementById('mainScreen').style.display='block';
   loadDaily();
 }
 
-// ======== DAILY CONTENT ========
-async function loadDaily() {
-  try {
-    const r = await fetch('http://localhost:3001/content/daily');
-    const d = await r.json();
-    document.getElementById('dailyEmoji').textContent = d.emoji||'📅';
-    document.getElementById('dailyTitle').textContent = d.title||'历史上的今天';
-    document.getElementById('dailyYear').textContent = d.year?d.year+'年':'';
-    document.getElementById('dailyDesc').textContent = d.description||'';
-  } catch(e) {
-    document.getElementById('dailyTitle').textContent = 'FC红白机发售';
-    document.getElementById('dailyYear').textContent = '1983年';
-    document.getElementById('dailyDesc').textContent = '1983年7月15日，任天堂FC红白机在日本发售，开启了游戏机时代';
-    document.getElementById('dailyEmoji').textContent = '🎮';
+async function loadDaily(){
+  try{
+    var r=await fetch('http://localhost:3001/content/daily');
+    var d=await r.json();
+    document.getElementById('dailyEmoji').textContent=d.emoji||'📅';
+    document.getElementById('dailyTitle').textContent=d.title||'历史上的今天';
+    document.getElementById('dailyYear').textContent=(d.year||'')+'年';
+    document.getElementById('dailyDesc').textContent=d.description||'';
+  }catch(e){
+    document.getElementById('dailyTitle').textContent='FC红白机发售';
+    document.getElementById('dailyYear').textContent='1983年';
+    document.getElementById('dailyDesc').textContent='1983年7月15日，任天堂FC红白机发售，开启了游戏机时代';
+    document.getElementById('dailyEmoji').textContent='🎮';
   }
 }
 
-// ======== GAMES ========
-let allGames = [];
-let currentFilter = null;
-
-async function loadGames() {
-  if(allGames.length) { renderGames(); return; }
-  showLoading('加载游戏中...');
-  try {
-    const r = await fetch('http://localhost:3001/games');
-    const d = await r.json();
-    allGames = d.games||d||[];
-  } catch(e) {
-    allGames = [
-      {id:'1',title:'魔塔·黄金大陆',emoji:'🏰',category:'魔塔',difficulty:'中等',description:'经典魔塔复刻版！50层紧张刺激的地下城挑战。',color:'#fbbf24'},
-      {id:'2',title:'像素勇者',emoji:'⚔️',category:'像素RPG',difficulty:'中等',description:'像素风格的冒险RPG，收集装备、升级技能、挑战Boss！',color:'#a78bfa'},
-      {id:'3',title:'跳跳像素人',emoji:'🏃',category:'跑酷',difficulty:'简单',description:'简单易上手的无尽跑酷，挑战最高分！',color:'#34d399'},
-      {id:'4',title:'宠物小精灵',emoji:'🧩',category:'休闲益智',difficulty:'简单',description:'经典益智游戏，支持闯关模式！',color:'#60a5fa'},
-      {id:'5',title:'魔塔·暗黑森林',emoji:'🌲',category:'魔塔',difficulty:'困难',description:'魔塔续作，更难的地下城挑战！',color:'#059669'},
-      {id:'6',title:'龙之谷',emoji:'🐉',category:'像素RPG',difficulty:'困难',description:'史诗级像素RPG，勇士屠龙传说！',color:'#f87171'},
-      {id:'7',title:'方块跑酷',emoji:'🟧',category:'跑酷',difficulty:'简单',description:'简单耐玩的方块跑酷，随时随地来一局！',color:'#fb923c'},
-      {id:'8',title:'2048怀旧版',emoji:'🔢',category:'休闲益智',difficulty:'中等',description:'经典2048，重温烧脑时光！',color:'#818cf8'},
-    ];
-  }
-  hideLoading();
-  renderGames();
-}
-
-function filterGames(el, cat) {
-  document.querySelectorAll('.tab-chip').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  currentFilter = cat;
-  renderGames();
-}
-
-function renderGames() {
-  const grid = document.getElementById('gamesGrid');
-  const list = currentFilter ? allGames.filter(g=>g.category===currentFilter) : allGames;
-  grid.innerHTML = list.map((g,idx)=>`
-    <div class="game-card" data-idx="${idx}" onclick="openGame(${idx})">
-      <div class="game-thumb" style="background:linear-gradient(135deg,${g.color},${g.color}88)">${g.emoji}</div>
-      <div class="game-info">
-        <div class="game-name">${g.title}</div>
-        <div class="game-meta">
-          <div class="game-cat">${g.category}</div>
-          <div class="game-diff" style="color:${g.difficulty==='简单'?'#34c759':g.difficulty==='困难'?'#ff3b30':'#ff9500'}">${g.difficulty}</div>
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-let currentGameIdx = 0;
-const gameFileMap = {
-  // API order: 0=魔塔, 1=像素勇者, 2=跳跳像素人, 3=宠物小精灵,
-  //            4=魔塔暗黑森林, 5=龙之谷, 6=方块跑酷, 7=2048
-  0: 'Games/game-molabel.html',    // 魔塔·黄金大陆
-  1: 'Games/game-rpg.html',       // 像素勇者
-  2: 'Games/game-runner.html',     // 跳跳像素人
-  3: 'Games/game-puzzle.html',     // 宠物小精灵三消
-  4: 'Games/game-darktower.html',  // 魔塔·暗黑森林
-  5: 'Games/game-dragon.html',    // 龙之谷
-  6: 'Games/game-blocks.html',     // 方块跑酷
-  7: 'Games/game-2048.html',      // 2048怀旧版
-};
-
-function openGame(idx) {
-  const g = allGames[idx];
-  if(!g) return;
-  currentGameIdx = idx;
-  document.getElementById('detailEmoji').textContent = g.emoji||'🎮';
-  document.getElementById('detailTitle').textContent = g.title||'游戏';
-  document.getElementById('detailCat').textContent = g.category||'休闲';
-  document.getElementById('detailDiff').textContent = g.difficulty||'中等';
-  document.getElementById('detailDesc').textContent = g.description||'一款经典游戏';
-  const hero = document.getElementById('detailHero');
-  const color = g.color||'#FF6B6B';
-  hero.style.background = `linear-gradient(135deg,${color},${color}88)`;
-  // Update play button text based on game
-  const playBtn = document.getElementById('detailPlayBtn');
-  playBtn.textContent = '▶ 开始游戏';
-  document.getElementById('gameDetail').classList.add('show');
-}
-
-function closeDetail() {
-  document.getElementById('gameDetail').classList.remove('show');
-}
-
-function playGame() {
-  const file = gameFileMap[currentGameIdx];
-  if(file) {
-    const base = window.location.href.replace(/\/[^/]*$/, '');
-    const gameUrl = base + '/' + file;
-    const iframe = document.getElementById('gameFrame');
-    iframe.src = gameUrl;
-    iframe.classList.add('show');
-    document.getElementById('gameBackBtn').classList.add('show');
-    // Hide other overlays
-    document.getElementById('gameDetail').classList.remove('show');
-    document.getElementById('mainScreen').style.display = 'none';
-  } else {
-    showToast('游戏即将上线');
-  }
-}
-
-function closeGameFrame() {
-  const iframe = document.getElementById('gameFrame');
-  iframe.src = '';
-  iframe.classList.remove('show');
-  document.getElementById('gameBackBtn').classList.remove('show');
-  document.getElementById('gameDetail').classList.remove('show');
-  document.getElementById('mainScreen').style.display = 'block';
-  document.getElementById('tabBar').style.display = 'flex';
-}
-
-// ======== PET ========
-let pet = {name:'小黄',emoji:'🐣',mood:'😊',hunger:70,happiness:70,energy:80,color:'rgba(255,183,77,0.2)'};
-const MOODS = {happy:{emoji:'😊',text:'开心'},normal:{emoji:'😐',text:'普通'},sad:{emoji:'😢',text:'难过'},hungry:{emoji:'🤤',text:'饿了'},sleepy:{emoji:'😴',text:'困了'}};
-
-function updatePetUI() {
-  document.getElementById('petEmoji').textContent = pet.emoji;
-  document.getElementById('petMood').textContent = (MOODS[pet.mood]||MOODS.normal).emoji+' '+(MOODS[pet.mood]||MOODS.normal).text;
-  document.getElementById('petName').textContent = pet.name;
-  document.getElementById('hVal').textContent = pet.hunger+'%';
-  document.getElementById('pVal').textContent = pet.happiness+'%';
-  document.getElementById('eVal').textContent = pet.energy+'%';
-  document.getElementById('hBar').style.width = pet.hunger+'%';
-  document.getElementById('pBar').style.width = pet.happiness+'%';
-  document.getElementById('eBar').style.width = pet.energy+'%';
-  document.getElementById('petAvatar').style.background = pet.color;
-}
-
-function petDo(action) {
-  const emoji = {feed:'🍞',play:'🎮',sleep:'😴'}[action];
-  if(action==='feed') {
-    pet.hunger = Math.min(100, pet.hunger+35);
-    pet.emoji = '🐣';
-    pet.mood = pet.hunger>50?'happy':'hungry';
-    showToast(`${pet.name}吃了一顿饭！`);
-  } else if(action==='play') {
-    pet.happiness = Math.min(100, pet.happiness+25);
-    pet.energy = Math.max(0, pet.energy-12);
-    pet.hunger = Math.max(0, pet.hunger-8);
-    pet.mood = pet.happiness>50?'happy':'sad';
-    document.getElementById('petEmoji').textContent = '🎮';
-    setTimeout(()=>{document.getElementById('petEmoji').textContent = pet.emoji;},800);
-    showToast(`${pet.name}玩耍得很开心！`);
-  } else if(action==='sleep') {
-    pet.energy = Math.min(100, pet.energy+45);
-    pet.mood = 'sleepy';
-    document.getElementById('petEmoji').textContent = '😴';
-    setTimeout(()=>{document.getElementById('petEmoji').textContent = pet.emoji;},1200);
-    showToast(`${pet.name}美美地睡了一觉！`);
+var pet={name:'小黄',emoji:'🐣',mood:'happy',hunger:70,happiness:70,energy:80};
+function petDo(action){
+  if(action==='feed'){
+    pet.hunger=Math.min(100,pet.hunger+35);
+    pet.mood=pet.hunger>50?'happy':'hungry';
+  }else if(action==='play'){
+    pet.happiness=Math.min(100,pet.happiness+30);
+    pet.energy=Math.max(0,pet.energy-10);
+    pet.hunger=Math.max(0,pet.hunger-15);
+  }else if(action==='sleep'){
+    pet.energy=Math.min(100,pet.energy+40);
+    pet.hunger=Math.max(0,pet.hunger-10);
   }
   updatePetUI();
 }
+function updatePetUI(){
+  var moods={happy:{emoji:'😊',text:'开心'},normal:{emoji:'😐',text:'普通'},sad:{emoji:'😢',text:'难过'},hungry:{emoji:'🤤',text:'饿了'},sleepy:{emoji:'😴',text:'困了'}};
+  var m=moods[pet.hunger<30?'hungry':pet.happiness<30?'sad':pet.energy<30?'sleepy':'happy'];
+  document.getElementById('petEmoji').textContent=m.emoji;
+  document.getElementById('petMood').textContent=m.text;
+  document.getElementById('hVal').textContent=pet.hunger+'%';
+  document.getElementById('pVal').textContent=pet.happiness+'%';
+  document.getElementById('eVal').textContent=pet.energy+'%';
+  document.getElementById('hBar').style.width=pet.hunger+'%';
+  document.getElementById('pBar').style.width=pet.happiness+'%';
+  document.getElementById('eBar').style.width=pet.energy+'%';
+  document.getElementById('hBar').style.background=pet.hunger<30?'#ef4444':pet.hunger<60?'#f97316':'#22c55e';
+  document.getElementById('pBar').style.background=pet.happiness<30?'#ef4444':pet.happiness<60?'#f97316':'#22c55e';
+  document.getElementById('eBar').style.background=pet.energy<30?'#ef4444':pet.energy<60?'#f97316':'#22c55e';
+}
+function renamePet(){
+  var n=prompt('给你的宠物起个名字：',pet.name);
+  if(n&&n.trim()){pet.name=n.trim();document.getElementById('petName').textContent=pet.name;}
+}
+setInterval(function(){
+  pet.hunger=Math.max(0,pet.hunger-1);
+  pet.happiness=Math.max(0,pet.happiness-1);
+  pet.energy=Math.min(100,pet.energy+2);
+  updatePetUI();
+},15000);
 
-function renamePet() {
-  const n = prompt('给宠物取个名字：', pet.name);
-  if(n && n.trim()) { pet.name = n.trim(); updatePetUI(); }
+async function loadGames(){
+  try{
+    var r=await fetch('http://localhost:3001/games');
+    var data=await r.json();
+    allGames=data.games||data;
+    renderGames(allGames);
+  }catch(e){
+    allGames=[
+      {id:1,title:'魔塔·黄金大陆',emoji:'🏰',category:'魔塔',difficulty:'中等',description:'经典的回合制RPG迷宫游戏，考验你的策略和数值规划能力。'},
+      {id:2,title:'像素勇者',emoji:'⚔️',category:'像素RPG',difficulty:'简单',description:'复古像素风格冒险游戏，一路砍怪升级收集装备。'},
+      {id:3,title:'跳跳像素人',emoji:'🏃',category:'跑酷',difficulty:'困难',description:'永无止境的跑酷挑战，反应力和节奏感的终极考验。'},
+      {id:4,title:'宠物小精灵三消',emoji:'🧩',category:'休闲益智',difficulty:'简单',description:'可爱的小精灵三消游戏，适合休闲时光。'},
+      {id:5,title:'魔塔·暗黑森林',emoji:'🌲',category:'魔塔',difficulty:'困难',description:'暗黑风格的魔塔续作，更高难度更多挑战。'},
+      {id:6,title:'龙之谷',emoji:'🐉',category:'像素RPG',difficulty:'中等',description:'与龙战斗的史诗级RPG，像素画风热血战斗。'},
+      {id:7,title:'方块跑酷',emoji:'🧱',category:'跑酷',difficulty:'中等',description:'躲避障碍收集方块的跑酷游戏，简单上手。'},
+      {id:8,title:'2048 怀旧版',emoji:'🔢',category:'休闲益智',difficulty:'简单',description:'经典2048数字合并游戏，消磨时间利器。'}
+    ];
+    renderGames(allGames);
+  }
 }
-
-// ======== OVERLAYS ========
-function showLoading(text) {
-  document.getElementById('loadingText').textContent = text||'加载中...';
-  document.getElementById('loadingOverlay').classList.add('show');
+function renderGames(games){
+  var grid=document.getElementById('gamesGrid');
+  grid.innerHTML='';
+  games.forEach(function(g,i){
+    var colors=['#a78bfa','#60a5fa','#f472b6','#fb923c','#34d399','#fbbf24','#f87171','#38bdf8'];
+    var bg=colors[i%colors.length];
+    var div=document.createElement('div');
+    div.className='gc';
+    div.innerHTML='<div class="gT" style="background:linear-gradient(135deg,'+bg+'22,'+bg+'11)"><span style="font-size:42px">'+g.emoji+'</span></div><div class="gI"><div class="gN">'+g.title+'</div><div class="gM"><span class="gC">'+g.category+'</span><span class="gC">'+g.difficulty+'</span></div></div>';
+    div.onclick=function(){showGameDetail(g);};
+    grid.appendChild(div);
+  });
 }
-function hideLoading() {
-  document.getElementById('loadingOverlay').classList.remove('show');
+function filterGames(el,cat){
+  document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('active');});
+  el.classList.add('active');
+  if(!cat){renderGames(allGames);return;}
+  renderGames(allGames.filter(function(g){return g.category.indexOf(cat)>-1;}));
 }
-
-let paywallShown = false;
-function showPaywall() {
-  document.getElementById('paywallOverlay').classList.add('show');
-  paywallShown = true;
+function showGameDetail(g){
+  currentGameIdx=allGames.indexOf(g);
+  document.getElementById('detailEmoji').textContent=g.emoji;
+  document.getElementById('detailTitle').textContent=g.title;
+  document.getElementById('detailCat').textContent=g.category||'休闲';
+  document.getElementById('detailDiff').textContent=g.difficulty||'简单';
+  document.getElementById('detailDesc').textContent=g.description||'一款有趣的游戏。';
+  document.getElementById('gameDetail').classList.add('show');
 }
-function hidePaywall() {
-  document.getElementById('paywallOverlay').classList.remove('show');
+function closeDetail(){
+  document.getElementById('gameDetail').classList.remove('show');
 }
-document.getElementById('paywallOverlay') && document.getElementById('paywallOverlay').addEventListener('click', function(e){
-  if(e.target===this) hidePaywall();
-});
-
-let toastTimer;
-function showToast(text) {
-  const t = document.getElementById('toast');
-  t.textContent = text;
+function playGame(){
+  var file=gameFileMap[currentGameIdx];
+  if(!file){showToast('游戏即将上线');return;}
+  var base=window.location.href.replace(/\/[^\/]*$/,'');
+  var url=base+'/'+file;
+  window.open(url,'_blank');
+}
+function showPaywall(){
+  document.getElementById('paywallOverlay').classList.toggle('show');
+}
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
   t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove('show'), 2000);
+  setTimeout(function(){t.classList.remove('show');},2000);
 }
-
-// ======== CLOCK ========
-function updateClock() {
-  const n = new Date();
-  document.getElementById('clock').textContent = n.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});
+function updateClock(){
+  var n=new Date();
+  var h=String(n.getHours()).padStart(2,'0');
+  var m=String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent=h+':'+m;
 }
-setInterval(updateClock, 1000);
 updateClock();
+setInterval(updateClock,30000);
 
-// ======== INIT ========
-updatePetUI();
+if(!localStorage.getItem('nb_visited')){
+  document.getElementById('onboarding').style.display='flex';
+  localStorage.setItem('nb_visited','1');
+}else{
+  document.getElementById('mainScreen').style.display='block';
+  loadDaily();
+}
 </script>
-
 </body>
 </html>
