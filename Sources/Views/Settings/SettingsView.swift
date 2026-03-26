@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var showContact = false
     @State private var showRestore = false
     @State private var showPaywall = false
+    @State private var showNotificationSettings = false
     @State private var isSigningIn = false
     @State private var errorMessage: String?
 
@@ -102,6 +103,18 @@ struct SettingsView: View {
                 // Support
                 Section("支持") {
                     Button {
+                        showNotificationSettings = true
+                    } label: {
+                        HStack {
+                            Text("通知设置")
+                            Spacer()
+                            Image(systemName: "bell.fill")
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+
+                    Button {
                         showContact = true
                     } label: {
                         HStack {
@@ -182,6 +195,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showPaywall) {
                 PaywallSheetView()
+            }
+            .sheet(isPresented: $showNotificationSettings) {
+                NotificationSettingsView()
             }
         }
     }

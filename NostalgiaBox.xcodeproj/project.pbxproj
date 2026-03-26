@@ -32,6 +32,7 @@
 		DA4B2C915D8A26209BD30EB6 /* PaywallSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D727069F20DFAB7741A9AEA /* PaywallSheetView.swift */; };
 		EB129CC6CE3149F36425CE7D /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9124879700C36AB1C064039F /* APIService.swift */; };
 		F3BB59ECD01C9DFD38EF8AE2 /* GamesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C89929D2D43FB750B202BBB /* GamesView.swift */; };
+		F3CDD1A309B9407B926740F7 /* NotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C485ED26F3B869BC135F8A7 /* NotificationSettingsView.swift */; };
 		F7B078A4FF6203A095D754A2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65974767E33FDDD9B5E5988 /* ContentView.swift */; };
 		F9F0B9AE061E0E2B3CD0FBC1 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80952C07C2D446402A66978 /* NotificationService.swift */; };
 /* End PBXBuildFile section */
@@ -51,6 +52,7 @@
 		61628DD68CB141094328A0AC /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		77A80FEE0E14DD24D37BFB70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7AEF772549FC30303979273C /* PetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetView.swift; sourceTree = "<group>"; };
+		7C485ED26F3B869BC135F8A7 /* NotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsView.swift; sourceTree = "<group>"; };
 		7E2FBD496413D02011DD189D /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		86E02E78564E8CC458C8B80D /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		8D0CCAC561BC5EDAF033EB0D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -81,6 +83,7 @@
 		1A7AD39F9AD3F5E39BBEFA6D /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				7C485ED26F3B869BC135F8A7 /* NotificationSettingsView.swift */,
 				F03F6310EDD074412654915A /* SettingsView.swift */,
 				FC0DF34E3EAD2B14D9166EF6 /* SupportViews.swift */,
 			);
@@ -344,6 +347,7 @@
 				67DCFCE695A54C979394F696 /* NetworkMonitor.swift in Sources */,
 				094E7FE22F3FF6C87255D773 /* NostalgiaBoxApp.swift in Sources */,
 				F9F0B9AE061E0E2B3CD0FBC1 /* NotificationService.swift in Sources */,
+				F3CDD1A309B9407B926740F7 /* NotificationSettingsView.swift in Sources */,
 				625E0CE2878AA9CCD92D2A8F /* OnboardingView.swift in Sources */,
 				DA4B2C915D8A26209BD30EB6 /* PaywallSheetView.swift in Sources */,
 				BB405C9B21B1344DAC01365C /* Pet.swift in Sources */,
