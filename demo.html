@@ -114,11 +114,6 @@ body{background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direct
 .dF{padding:12px 20px 32px}
 .dPlay{width:100%;background:#FF6B6B;color:#fff;border:none;padding:15px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,107,.4);transition:transform .15s}
 .dPlay:active{transform:scale(.97)}
-.loading{position:absolute;inset:0;background:rgba(255,255,255,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:40}
-.loading.show{opacity:1;pointer-events:auto}
-.spin{width:44px;height:44px;border:3px solid #f0f0f5;border-top-color:#FF6B6B;border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loadT{font-size:14px;color:#999}
 .paywall{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:flex;align-items:flex-end;z-index:35;opacity:0;pointer-events:none;transition:opacity .3s}
 .paywall.show{opacity:1;pointer-events:auto}
 .paywall.show .ps{transform:translateY(0)}
@@ -222,12 +217,12 @@ body{background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direct
           <div class="br">$2.99</div>
         </div>
         <div class="sh"><div class="st">📅 历史上的今天</div></div>
-        <div class="daily" onclick="loadDaily()">
-          <div class="dE" id="dailyEmoji">🎮</div>
+        <div class="daily">
+          <div class="dE">🎮</div>
           <div>
-            <div class="dTi" id="dailyTitle">FC红白机发售</div>
-            <div class="dYr" id="dailyYear">1983年</div>
-            <div class="dDs" id="dailyDesc">1983年7月15日，任天堂FC红白机发售，开启了游戏机时代</div>
+            <div class="dTi">FC红白机发售</div>
+            <div class="dYr">1983年</div>
+            <div class="dDs">1983年7月15日，任天堂FC红白机发售，开启了游戏机时代</div>
           </div>
         </div>
         <div class="sh"><div class="st">⚡ 快速开始</div></div>
@@ -337,12 +332,6 @@ body{background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direct
       <div class="tab-item" id="tab2" onclick="switchTab(2)"><div class="icon">🎮</div><div>游戏</div></div>
       <div class="tab-item" id="tab3" onclick="switchTab(3)"><div class="icon">📻</div><div>播放</div></div>
       <div class="tab-item" id="tab4" onclick="switchTab(4)"><div class="icon">⚙️</div><div>设置</div></div>
-    </div>
-
-    <div class="loading" id="loadingOverlay">
-      <div class="spin"></div>
-      <div class="loadT" id="loadingText">加载中...</div>
-    </div>
 
     <div class="paywall" id="paywallOverlay">
       <div class="ps">
@@ -400,19 +389,8 @@ function closeOb(){
   loadDaily();
 }
 
-async function loadDaily(){
-  try{
-    var r=await fetch('http://localhost:3001/content/daily');
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    var d=await r.json();
-    document.getElementById('dailyEmoji').textContent=d.emoji||'🎮';
-    document.getElementById('dailyTitle').textContent=d.title||'FC红白机发售';
-    document.getElementById('dailyYear').textContent=(d.year||'1983')+'年';
-    document.getElementById('dailyDesc').textContent=d.description||'1983年7月15日，任天堂FC红白机发售，开启了游戏机时代';
-  }catch(e){
-    // Fallback content already set in HTML - just silently fail
-  }
-}
+// loadDaily: static content, no backend needed
+function loadDaily(){}
 
 var pet={name:'小黄',emoji:'🐣',mood:'happy',hunger:70,happiness:70,energy:80};
 function petDo(action){
@@ -455,25 +433,19 @@ setInterval(function(){
   updatePetUI();
 },15000);
 
-async function loadGames(){
-  try{
-    var r=await fetch('http://localhost:3001/games');
-    var data=await r.json();
-    allGames=data.games||data;
-    renderGames(allGames);
-  }catch(e){
-    allGames=[
-      {id:1,title:'魔塔·黄金大陆',emoji:'🏰',category:'魔塔',difficulty:'中等',description:'经典的回合制RPG迷宫游戏，考验你的策略和数值规划能力。'},
-      {id:2,title:'像素勇者',emoji:'⚔️',category:'像素RPG',difficulty:'简单',description:'复古像素风格冒险游戏，一路砍怪升级收集装备。'},
-      {id:3,title:'跳跳像素人',emoji:'🏃',category:'跑酷',difficulty:'困难',description:'永无止境的跑酷挑战，反应力和节奏感的终极考验。'},
-      {id:4,title:'宠物小精灵三消',emoji:'🧩',category:'休闲益智',difficulty:'简单',description:'可爱的小精灵三消游戏，适合休闲时光。'},
-      {id:5,title:'魔塔·暗黑森林',emoji:'🌲',category:'魔塔',difficulty:'困难',description:'暗黑风格的魔塔续作，更高难度更多挑战。'},
-      {id:6,title:'龙之谷',emoji:'🐉',category:'像素RPG',difficulty:'中等',description:'与龙战斗的史诗级RPG，像素画风热血战斗。'},
-      {id:7,title:'方块跑酷',emoji:'🧱',category:'跑酷',difficulty:'中等',description:'躲避障碍收集方块的跑酷游戏，简单上手。'},
-      {id:8,title:'2048 怀旧版',emoji:'🔢',category:'休闲益智',difficulty:'简单',description:'经典2048数字合并游戏，消磨时间利器。'}
-    ];
-    renderGames(allGames);
-  }
+// loadGames: static data, no backend needed
+function loadGames(){
+  allGames=[
+    {id:1,title:'魔塔·黄金大陆',emoji:'🏰',category:'魔塔',difficulty:'中等',description:'经典的回合制RPG迷宫游戏，考验你的策略和数值规划能力。'},
+    {id:2,title:'像素勇者',emoji:'⚔️',category:'像素RPG',difficulty:'简单',description:'复古像素风格冒险游戏，一路砍怪升级收集装备。'},
+    {id:3,title:'跳跳像素人',emoji:'🏃',category:'跑酷',difficulty:'困难',description:'永无止境的跑酷挑战，反应力和节奏感的终极考验。'},
+    {id:4,title:'宠物小精灵三消',emoji:'🧩',category:'休闲益智',difficulty:'简单',description:'可爱的小精灵三消游戏，适合休闲时光。'},
+    {id:5,title:'魔塔·暗黑森林',emoji:'🌲',category:'魔塔',difficulty:'困难',description:'暗黑风格的魔塔续作，更高难度更多挑战。'},
+    {id:6,title:'龙之谷',emoji:'🐉',category:'像素RPG',difficulty:'中等',description:'与龙战斗的史诗级RPG，像素画风热血战斗。'},
+    {id:7,title:'方块跑酷',emoji:'🧱',category:'跑酷',difficulty:'中等',description:'躲避障碍收集方块的跑酷游戏，简单上手。'},
+    {id:8,title:'2048 怀旧版',emoji:'🔢',category:'休闲益智',difficulty:'简单',description:'经典2048数字合并游戏，消磨时间利器。'}
+  ];
+  renderGames(allGames);
 }
 function renderGames(games){
   var grid=document.getElementById('gamesGrid');
@@ -533,7 +505,6 @@ setInterval(updateClock,30000);
 
 // Always show mainScreen first, then optionally show onboarding
 document.getElementById('mainScreen').style.display='block';
-document.getElementById('loadingOverlay').style.display='none';
 if(!localStorage.getItem('nb_visited')){
   document.getElementById('onboarding').style.display='flex';
   localStorage.setItem('nb_visited','1');
