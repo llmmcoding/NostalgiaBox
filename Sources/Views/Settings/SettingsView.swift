@@ -7,6 +7,7 @@ struct SettingsView: View {
     @State private var showTermsOfService = false
     @State private var showContact = false
     @State private var showRestore = false
+    @State private var showPaywall = false
 
     var body: some View {
         NavigationStack {
@@ -33,7 +34,7 @@ struct SettingsView: View {
                         }
                     } else {
                         Button {
-                            // show paywall
+                            showPaywall = true
                         } label: {
                             HStack {
                                 Image(systemName: "lock.open.fill")
@@ -170,6 +171,9 @@ struct SettingsView: View {
                 }
             } message: {
                 Text("如已完成购买但未解锁，请点击恢复。")
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallSheetView()
             }
         }
     }
