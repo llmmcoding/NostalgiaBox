@@ -287,7 +287,7 @@ body {
     </div>
 
     <!-- ONBOARDING -->
-    <div class="onboarding" id="onboarding">
+    <div class="onboarding" id="onboarding" style="display:none">
       <div class="ob-slides">
         <div class="ob-slide active" data-idx="0">
           <div class="ob-emoji">⏰</div><div class="ob-title">欢迎来到时光机</div>
@@ -429,7 +429,7 @@ body {
         <div class="settings-divider"></div>
         <div class="settings-section-title">关于</div>
         <div class="settings-item"><div class="sicon">ℹ️</div><div class="stext">版本</div><div class="svalue">1.0.0 (1)</div></div>
-        <div class="settings-item" onclick="showToast('感谢评分支持！')"><div class="sicon">⭐        <div class="settings-item" onclick="showToast('感谢支持！')"><div class="sicon">⭐</div><div class="stext">给我们评分</div><div class="sarrow">›</div></div>
+        <div class="settings-item" onclick="showToast('感谢您的支持！')"><div class="sicon">⭐</div><div class="stext">给我们评分</div><div class="sarrow">›</div></div>
       </div>
     </div>
 
@@ -584,8 +584,8 @@ function filterGames(el, cat) {
 function renderGames() {
   const grid = document.getElementById('gamesGrid');
   const list = currentFilter ? allGames.filter(g=>g.category===currentFilter) : allGames;
-  grid.innerHTML = list.map(g=>`
-    <div class="game-card" onclick="openGame(${JSON.stringify(g).replace(/"/g,'&quot;')})">
+  grid.innerHTML = list.map((g,idx)=>`
+    <div class="game-card" data-idx="${idx}" onclick="openGame(${idx})">
       <div class="game-thumb" style="background:linear-gradient(135deg,${g.color},${g.color}88)">${g.emoji}</div>
       <div class="game-info">
         <div class="game-name">${g.title}</div>
@@ -597,14 +597,17 @@ function renderGames() {
     </div>`).join('');
 }
 
-function openGame(g) {
-  document.getElementById('detailEmoji').textContent = g.emoji;
-  document.getElementById('detailTitle').textContent = g.title;
-  document.getElementById('detailCat').textContent = g.category;
-  document.getElementById('detailDiff').textContent = g.difficulty;
-  document.getElementById('detailDesc').textContent = g.description;
+function openGame(idx) {
+  const g = allGames[idx];
+  if(!g) return;
+  document.getElementById('detailEmoji').textContent = g.emoji||'🎮';
+  document.getElementById('detailTitle').textContent = g.title||'游戏';
+  document.getElementById('detailCat').textContent = g.category||'休闲';
+  document.getElementById('detailDiff').textContent = g.difficulty||'中等';
+  document.getElementById('detailDesc').textContent = g.description||'一款经典游戏';
   const hero = document.getElementById('detailHero');
-  hero.style.background = `linear-gradient(135deg,${g.color},${g.color}88)`;
+  const color = g.color||'#FF6B6B';
+  hero.style.background = `linear-gradient(135deg,${color},${color}88)`;
   document.getElementById('gameDetail').classList.add('show');
 }
 
