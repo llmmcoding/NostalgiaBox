@@ -8,13 +8,15 @@ struct ContentView: View {
     enum Tab: String, CaseIterable {
         case home = "首页"
         case games = "游戏"
-        case player = "播放器"
+        case pet = "宠物"
+        case player = "播放"
         case settings = "设置"
 
         var icon: String {
             switch self {
             case .home: return "house.fill"
             case .games: return "gamecontroller.fill"
+            case .pet: return "pawprint.fill"
             case .player: return "play.rectangle.fill"
             case .settings: return "gearshape.fill"
             }
@@ -47,6 +49,12 @@ struct ContentView: View {
                     Label(Tab.games.rawValue, systemImage: Tab.games.icon)
                 }
                 .tag(Tab.games)
+
+            PetView()
+                .tabItem {
+                    Label(Tab.pet.rawValue, systemImage: Tab.pet.icon)
+                }
+                .tag(Tab.pet)
 
             PlayerView()
                 .tabItem {

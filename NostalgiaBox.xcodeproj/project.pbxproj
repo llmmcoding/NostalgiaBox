@@ -20,9 +20,12 @@
 		9E692D1A69CECD9D34BC5546 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D0CCAC561BC5EDAF033EB0D /* Assets.xcassets */; };
 		9EB5AB5535396DEB80F3BEF1 /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9484FC17E32A7C1DDF9C172 /* PlayerViewModel.swift */; };
 		B6D9B48FBA9FBF0B4F27C075 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3053A5B500C32437308237 /* PlayerView.swift */; };
+		B8C8411A4B07E98A0FF05AF8 /* PetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEF772549FC30303979273C /* PetView.swift */; };
 		B98A998B7F93D3EA06BDF00F /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 981582F04F044253E44B281A /* Models.swift */; };
+		BB405C9B21B1344DAC01365C /* Pet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E0A3AAC1BD551736868B65 /* Pet.swift */; };
 		C0FD090DAE3F1AE72142F6AA /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E02E78564E8CC458C8B80D /* AppState.swift */; };
 		C7AB77AA114B37F170D0F18D /* DatabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC3B09FD390F0C5E2FF0E755 /* DatabaseService.swift */; };
+		C8C4CA9EFB6F5E02B61C0E58 /* PetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B651FF9EF92449E8B7F4D2 /* PetViewModel.swift */; };
 		CFE02BD84B42D3133CCC0DF1 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2D5A36F33716849F1A29DF /* KeychainService.swift */; };
 		D31B512498CC131BAC853B60 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F03F6310EDD074412654915A /* SettingsView.swift */; };
 		DA4B2C915D8A26209BD30EB6 /* PaywallSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D727069F20DFAB7741A9AEA /* PaywallSheetView.swift */; };
@@ -33,6 +36,8 @@
 
 /* Begin PBXFileReference section */
 		01823AFE504844C7EDB739F2 /* GamesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesViewModel.swift; sourceTree = "<group>"; };
+		02B651FF9EF92449E8B7F4D2 /* PetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetViewModel.swift; sourceTree = "<group>"; };
+		13E0A3AAC1BD551736868B65 /* Pet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pet.swift; sourceTree = "<group>"; };
 		17805042DC500F52CB05910D /* NostalgiaBoxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostalgiaBoxApp.swift; sourceTree = "<group>"; };
 		30BF5EAFFB711D16245DDBA9 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		3D3053A5B500C32437308237 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
@@ -42,6 +47,7 @@
 		5EB084A30C1356D1217A362A /* NostalgiaBox.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NostalgiaBox.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		61628DD68CB141094328A0AC /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		77A80FEE0E14DD24D37BFB70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7AEF772549FC30303979273C /* PetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetView.swift; sourceTree = "<group>"; };
 		7E2FBD496413D02011DD189D /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		86E02E78564E8CC458C8B80D /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		8D0CCAC561BC5EDAF033EB0D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -106,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				981582F04F044253E44B281A /* Models.swift */,
+				13E0A3AAC1BD551736868B65 /* Pet.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -149,9 +156,18 @@
 			children = (
 				01823AFE504844C7EDB739F2 /* GamesViewModel.swift */,
 				BDF4CA74AB8DE96C9979DA02 /* HomeViewModel.swift */,
+				02B651FF9EF92449E8B7F4D2 /* PetViewModel.swift */,
 				C9484FC17E32A7C1DDF9C172 /* PlayerViewModel.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		A8393E73BA32964255C6ED37 /* Pet */ = {
+			isa = PBXGroup;
+			children = (
+				7AEF772549FC30303979273C /* PetView.swift */,
+			);
+			path = Pet;
 			sourceTree = "<group>";
 		};
 		BB62A0B8F6745F38F945E4A9 /* Sources */ = {
@@ -188,6 +204,7 @@
 				C8532860F14C196D8BD587E0 /* Home */,
 				FA0342FFAB523690A7C29177 /* Onboarding */,
 				6696C7EB5C4A6138DDBE9076 /* Paywall */,
+				A8393E73BA32964255C6ED37 /* Pet */,
 				0F3F5956A34C3C16E3487355 /* Player */,
 				1A7AD39F9AD3F5E39BBEFA6D /* Settings */,
 				9E2E8D72CC0D156D86D9313E /* AppIconView.swift */,
@@ -321,6 +338,9 @@
 				094E7FE22F3FF6C87255D773 /* NostalgiaBoxApp.swift in Sources */,
 				625E0CE2878AA9CCD92D2A8F /* OnboardingView.swift in Sources */,
 				DA4B2C915D8A26209BD30EB6 /* PaywallSheetView.swift in Sources */,
+				BB405C9B21B1344DAC01365C /* Pet.swift in Sources */,
+				B8C8411A4B07E98A0FF05AF8 /* PetView.swift in Sources */,
+				C8C4CA9EFB6F5E02B61C0E58 /* PetViewModel.swift in Sources */,
 				B6D9B48FBA9FBF0B4F27C075 /* PlayerView.swift in Sources */,
 				9EB5AB5535396DEB80F3BEF1 /* PlayerViewModel.swift in Sources */,
 				D31B512498CC131BAC853B60 /* SettingsView.swift in Sources */,
