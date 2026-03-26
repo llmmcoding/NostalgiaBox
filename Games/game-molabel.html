@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>经典魔塔·黄金大陆</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;color:#eee;font-family:'Courier New',monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;user-select:none}
+#startScreen{position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
+#startScreen h1{font-size:2.5em;color:#f6c90e;text-shadow:0 0 20px #f6c90e;margin-bottom:10px}
+#startScreen .sub{color:#aaa;font-size:1.1em;margin-bottom:30px}
+#startScreen .tips{color:#888;font-size:0.85em;max-width:400px;text-align:center;line-height:1.6;margin-bottom:30px}
+.btn{padding:12px 40px;font-size:1.1em;background:#f6c90e;color:#1a1a2e;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:bold;margin:5px}
+.btn:hover{background:#ffe066}
+#gameContainer{position:relative;display:none;flex-direction:column;align-items:center}
+canvas{border:3px solid #f6c90e;border-radius:4px;image-rendering:pixelated;max-width:95vw;max-height:70vh}
+#hud{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;pointer-events:none;z-index:10}
+.hud-left{background:rgba(0,0,0,0.7);padding:6px 10px;border-radius:6px;font-size:0.85em}
+.hud-right{background:rgba(0,0,0,0.7);padding:6px 10px;border-radius:6px;font-size:0.85em;text-align:right}
+.hp-bar{width:120px;height:14px;background:#333;border-radius:7px;overflow:hidden;margin-top:4px}
+.hp-fill{height:100%;background:linear-gradient(90deg,#e74c3c,#c0392b);transition:width .3s}
+#msg{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#f6c90e;padding:8px 20px;border-radius:20px;font-size:0.9em;pointer-events:none;z-index:10;white-space:nowrap;opacity:0;transition:opacity .3s}
+#msg.show{opacity:1}
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:50}
+#overlay h2{font-size:1.8em;color:#f6c90e;margin-bottom:20px}
+#overlay .stats-grid{background:rgba(255,255,255,0.05);padding:15px 25px;border-radius:10px;margin-bottom:20px;text-align:left;line-height:2}
+.menu-btns{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+#shop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);flex-direction:column;align-items:center;justify-content:center;z-index:60}
+#shop h2{color:#f6c90e;font-size:1.6em;margin-bottom:5px}
+#shop .shop-floor{color:#888;margin-bottom:15px}
+#shop .shop-items{display:flex;flex-direction:column;gap:8px;width:300px}
+.shop-item{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.05);padding:12px 16px;border-radius:8px;color:#ddd;font-size:0.95em}
+.shop-item button{padding:6px 14px;background:#27ae60;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit}
+.shop-item button:hover{background:#2ecc71}
+.shop-item button:disabled{background:#555;cursor:not-allowed}
+#closeShop{margin-top:15px;padding:10px 30px;background:#e74c3c;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:1em}
+#battle{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);flex-direction:column;align-items:center;justify-content:center;z-index:55}
+#battle h2{color:#e74c3c;font-size:1.5em;margin-bottom:15px}
+#battle .battler{display:flex;gap:80px;align-items:center;margin-bottom:20px}
+.battler-side{text-align:center}
+.battler-side .name{font-size:1.1em;margin-bottom:8px;color:#f6c90e}
+.battler-side .emoji{font-size:3em}
+.battler-side .battler-hp{width:140px;height:16px;background:#333;border-radius:8px;overflow:hidden;margin-top:8px}
+.battler-side .battler-hp-fill{height:100%;background:#e74c3c;transition:width .4s}
+.battler-vs{font-size:2em;color:#fff;font-weight:bold}
+#battleLog{color:#ccc;font-size:0.9em;min-height:24px;margin-bottom:15px;text-align:center}
+#battleEnd{color:#f6c90e;font-size:1.2em;font-weight:bold;margin-bottom:10px}
+#battleContinue{margin-top:10px;padding:10px 30px;background:#27ae60;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:1em}
+#victory{display:none;position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);flex-direction:column;align-items:center;justify-content:center;z-index:200}
+#victory h1{font-size:2.5em;color:#f6c90e;text-shadow:0 0 30px #f6c90e;margin-bottom:15px}
+#victory p{color:#aaa;margin-bottom:30px}
+</style>
+</head>
+<body>
+
+<div id="startScreen">
+  <h1>🏰 经典魔塔·黄金大陆</h1>
+  <div class="sub">Golden Land of Mystery Tower</div>
+  <div class="tips">
+    📖 方向键 / WASD 移动 &nbsp;|&nbsp; 空格/ESC 菜单<br>
+    ⚔️ 碰撞怪物自动战斗 &nbsp;|&nbsp; 🔑 蓝色门消耗钥匙<br>
+    📦 宝橙色箱获得金币 &nbsp;|&nbsp; ⬆️ 橙色楼梯通往下一层<br>
+    🛒 每5层有商店可购买属性
+  </div>
+  <button class="btn" onclick="startGame()">开始冒险</button>
+</div>
+
+<div id="gameContainer">
+  <div id="hud">
+    <div class="hud-left">
+      <div>🏰 第 <span id="floorNum">1</span> 层</div>
+    </div>
+    <div class="hud-right">
+      <div>❤️ HP <span id="curHp">1000</span>/<span id="maxHp">1000</span></div>
+      <div class="hp-bar"><div class="hp-fill" id="hpFill" style="width:100%"></div></div>
+      <div>💰 金币 <span id="gold">0</span></div>
+      <div>🔑 钥匙 <span id="keys">3</span></div>
+    </div>
+  </div>
+  <canvas id="canvas"></canvas>
+  <div id="msg"></div>
+</div>
+
+<div id="overlay">
+  <h2 id="overlayTitle">游戏暂停</h2>
+  <div class="stats-grid" id="statsGrid"></div>
+  <div class="menu-btns" id="menuBtns"></div>
+</div>
+
+<div id="shop">
+  <h2>🛒 商店 - 第<span id="shopFloor">5</span>层</h2>
+  <div class="shop-floor">💰 你的金币: <span id="shopGold">0</span></div>
+  <div class="shop-items" id="shopItems"></div>
+  <button id="closeShop" onclick="closeShop()">离开商店</button>
+</div>
+
+<div id="battle">
+  <h2>⚔️ 战斗中</h2>
+  <div class="battler">
+    <div class="battler-side">
+      <div class="name">👤 勇士</div>
+      <div class="emoji">🧙</div>
+      <div class="battler-hp"><div class="battler-hp-fill" id="bhP" style="width:100%"></div></div>
+    </div>
+    <div class="battler-vs">⚡</div>
+    <div class="battler-side">
+      <div class="name" id="enemyName">史莱姆</div>
+      <div class="emoji" id="enemyEmoji">🟢</div>
+      <div class="battler-hp"><div class="battler-hp-fill" id="ehP" style="width:100%"></div></div>
+    </div>
+  </div>
+  <div id="battleLog">准备战斗...</div>
+  <div id="battleEnd"></div>
+  <button id="battleContinue" onclick="continueBattle()" style="display:none">继续</button>
+</div>
+
+<div id="victory">
+  <h1>🏆 通关！</h1>
+  <p>你成功征服了魔塔黄金大陆！</p>
+  <button class="btn" onclick="location.reload()">再玩一次</button>
+</div>
+
+<script>
+const TILE=24;
+const MAP_W=20;
+const MAP_H=14;
+
+// Tile types
+const T={
+  WALL:1,FLOOR:0,STAIRS:2,
+  PLAYER:3,ENEMY:4,KEY:5,DOOR:6,CHEST:7
+};
+
+// Map symbols
+const S={W:'#',F:' ',S:'X',P:'@',E:'M',K:'?',D:'|',C:'$'};
+
+// Enemy templates
+const ENEMY_TEMPLATES=[
+  {emoji:'🐀',name:'老鼠',hp:30,atk:5,def:2,gold:5},
+  {emoji:'🟢',name:'史莱姆',hp:50,atk:8,def:3,gold:8},
+  {emoji:'👺',name:'小鬼',hp:80,atk:12,def:5,gold:12},
+  {emoji:'🐍',name:'毒蛇',hp:60,atk:15,def:4,gold:10},
+  {emoji:'🦇',name:'蝙蝠',hp:40,atk:10,def:3,gold:7},
+  {emoji:'🧟',name:'骷髅',hp:100,atk:15,def:8,gold:18},
+  {emoji:'👹',name:'恶鬼',hp:150,atk:20,def:10,gold:25},
+  {emoji:'🐉',name:'幼龙',hp:200,atk:25,def:12,gold:35},
+];
+
+function makeEnemy(idx, floor){
+  const base=ENEMY_TEMPLATES[Math.min(idx,ENEMY_TEMPLATES.length-1)];
+  const scale=1+(floor-1)*0.08;
+  return{
+    ...base,
+    hp:Math.floor(base.hp*scale),
+    maxHp:Math.floor(base.hp*scale),
+    atk:Math.floor(base.atk*scale),
+    def:Math.floor(base.def*scale),
+    gold:Math.floor(base.gold*scale),
+    emoji:base.emoji
+  };
+}
+
+// Pre-designed floors 1-10
+const FLOOR_MAPS=[
+  // Floor 1 - Tutorial
+  [
+    "####################",
+    "#                  #",
+    "#  @  ?     M  |   #",
+    "#        ###  |  X  #",
+    "#   ###  #        ##",
+    "#   #    #   M     #",
+    "#        ###  ##   #",
+    "#  M           ##  #",
+    "# #####  ?   #     #",
+    "#     #     #  M   #",
+    "#  ?  #  M  #      #",
+    "#     #     #   X  #",
+    "#                  #",
+    "####################",
+  ],
+  // Floor 2
+  [
+    "####################",
+    "#      M           #",
+    "#  ## #####  ##    #",
+    "#   @    M   #   X #",
+    "#####  ####  #     #",
+    "#    M    #  ##### #",
+    "# #####   #      # #",
+    "#     #M  #  M   # #",
+    "# M   #   #  ### # #",
+    "# ### # ? #    #   #",
+    "#   # #   #### #   #",
+    "#   #         # ?  #",
+    "#           M    X  #",
+    "####################",
+  ],
+  // Floor 3
+  [
+    "####################",
+    "#@   |    |   M   X#",
+    "#    |    |        #",
+    "#  M  #####   M    #",
+    "#      M  #        #",
+    "####       #   #####",
+    "#    ##### #       #",
+    "# M  #   # #####   #",
+    "#    # ? #      M  #",
+    "# ####   #####     #",
+    "#    M      M  ####",
+    "# #####  ?  #    M #",
+    "#      M       X   #",
+    "####################",
+  ],
+  // Floor 4
+  [
+    "####################",
+    "# @    M  M    M   #",
+    "### #####  ####### #",
+    "#    M  ?     M    #",
+    "# ##########  ###  #",
+    "# #        #    #  #",
+    "# #   M    # M  #  #",
+    "# #   #####   #  #  #",
+    "# ###      ###   #  #",
+    "#    M ?  M    #    #",
+    "# ######  ####     #",
+    "#      M       M    #",
+    "#      ?      X     #",
+    "####################",
+  ],
+  // Floor 5
+  [
+    "####################",
+    "# @#   M    M   #  #",
+    "#  #  #####  #   # #",
+    "#     M   M  # M # #",
+    "### #####  #   #   #",
+    "#M       # ###  #  #",
+    "# #####  #   #     #",
+    "#    #   # ? # ### #",
+    "# M  #  ### #       #",
+    "#  #  #  M  #  M    #",
+    "#  #      ###      #",
+    "#  #   M        M  #",
+    "#         X        #",
+    "####################",
+  ],
+  // Floor 6
+  [
+    "####################",
+    "#   M  M   M  M    #",
+    "#  ############### #",
+    "#      M  M  ?     #",
+    "# ######  #########",
+    "# #    M      M   #",
+    "# # #####  ####   #",
+    "# #    M #    M  M #",
+    "# #####  # ####    #",
+    "#    M #    M   ####",
+    "####   # M   #     #",
+    "#   #####  ##### M #",
+    "# @             X  #",
+    "####################",
+  ],
+  // Floor 7
+  [
+    "####################",
+    "#    M  M  M  M    #",
+    "# ###############  #",
+    "# M  M  ?  M   M   #",
+    "# ###############  #",
+    "#       M          #",
+    "## ############ ##",
+    "#  M  M  M  M  M  #",
+    "# ############### #",
+    "#      M  ?  M    #",
+    "## ############ ##",
+    "# M  M  M  M  M   #",
+    "# @             X #",
+    "####################",
+  ],
+  // Floor 8
+  [
+    "####################",
+    "# @#   M#   M#  M  #",
+    "#  #####   #####   #",
+    "#    M# ? #   M#   #",
+    "# ####    ###  #   #",
+    "# #   ####    ##   #",
+    "# # M    M  M    M #",
+    "# ###  ####  ###   #",
+    "#   M #  ?  #  M   #",
+    "# ###   ####   ### #",
+    "#   M  M   M   M   #",
+    "# #################",
+    "#       X          #",
+    "####################",
+  ],
+  // Floor 9
+  [
+    "####################",
+    "# @   M    M    M  #",
+    "# ###############  #",
+    "#M  M  ?  M  M  M  #",
+    "# ###############  #",
+    "#     M    M   M   #",
+    "## ###############",
+    "#  M   M  M   M    #",
+    "## ###############",
+    "#     M  ?  M     #",
+    "#  M   M    M  M  #",
+    "# ###############  #",
+    "#       X          #",
+    "####################",
+  ],
+  // Floor 10
+  [
+    "####################",
+    "#  M #  M #  M # M #",
+    "#   #    #    #    #",
+    "# ###### ######   #",
+    "#   M  ?    M   M  #",
+    "####  ######  ####",
+    "# M  #    #  # M   #",
+    "#    #  M #    #   #",
+    "####  ######  ####",
+    "# M  #    #  # M   #",
+    "#    # M  #    #   #",
+    "# ###### ######   #",
+    "# @          X     #",
+    "####################",
+  ],
+];
+
+function parseMap(strs,floor){
+  const map=[];
+  const entities={enemies:[],keys:[],doors:[],chests:[],stairs:null};
+  const idx={};
+  for(let y=0;y<MAP_H;y++){
+    map[y]=[];
+    const row=strs[y]||'';
+    for(let x=0;x<MAP_W;x++){
+      const c=row[x]||' ';
+      switch(c){
+        case '#':map[y][x]=T.WALL;break;
+        case ' ':map[y][x]=T.FLOOR;break;
+        case '@':map[y][x]=T.FLOOR;idx.px=x;idx.py=y;break;
+        case 'X':map[y][x]=T.FLOOR;entities.stairs={x,y};break;
+        case 'M':map[y][x]=T.FLOOR;entities.enemies.push({x,y,...makeEnemy((floor-1)%ENEMY_TEMPLATES.length,floor)});break;
+        case '?':map[y][x]=T.FLOOR;entities.keys.push({x,y,count:1});break;
+        case '|':map[y][x]=T.DOOR;entities.doors.push({x,y,open:false});break;
+        case '$':map[y][x]=T.CHEST;entities.chests.push({x,y,opened:false});break;
+        default:map[y][x]=T.FLOOR;
+      }
+    }
+  }
+  return{map,entities,idx};
+}
+
+function genMap(floor){
+  const map=[];
+  const entities={enemies:[],keys:[],doors:[],chests:[],stairs:null};
+  // Simple random map generation
+  for(let y=0;y<MAP_H;y++){
+    map[y]=[];
+    for(let x=0;x<MAP_W;x++){
+      if(y===0||y===MAP_H-1||x===0||x===MAP_W-1){
+        map[y][x]=T.WALL;
+      } else {
+        map[y][x]=T.FLOOR;
+      }
+    }
+  }
+  // Add some walls
+  for(let i=0;i<floor;i++){
+    const x=3+Math.floor(Math.random()*(MAP_W-6));
+    const y=3+Math.floor(Math.random()*(MAP_H-6));
+    if(x>0&&x<MAP_W-1&&y>0&&y<MAP_H-1){
+      map[y][x]=T.WALL;
+    }
+  }
+  // Player start
+  map[1][1]=T.FLOOR;
+  const px=1,py=1;
+  // Stairs
+  const sx=MAP_W-2,sy=MAP_H-2;
+  map[sy][sx]=T.FLOOR;
+  entities.stairs={x:sx,y:sy};
+  // Enemies
+  const numEnemies=3+Math.floor(floor/2);
+  for(let i=0;i<numEnemies;i++){
+    let ex,ey,tryCount=0;
+    do{
+      ex=1+Math.floor(Math.random()*(MAP_W-2));
+      ey=1+Math.floor(Math.random()*(MAP_H-2));
+      tryCount++;
+    }while((ex<px+3&&ey<py+3)||map[ey][ex]!==T.FLOOR||entities.enemies.some(e=>e.x===ex&&e.y===ey)&&tryCount<20);
+    if(tryCount<20){
+      entities.enemies.push({x:ex,y:ey,...makeEnemy((floor-1)%ENEMY_TEMPLATES.length,floor)});
+    }
+  }
+  // Keys
+  const numKeys=1+Math.floor(Math.random()*2);
+  for(let i=0;i<numKeys;i++){
+    let kx,ky,tc=0;
+    do{
+      kx=1+Math.floor(Math.random()*(MAP_W-2));
+      ky=1+Math.floor(Math.random()*(MAP_H-2));
+      tc++;
+    }while(map[ky][kx]!==T.FLOOR&&tc<20);
+    entities.keys.push({x:kx,y:ky,count:1});
+  }
+  // Doors
+  const numDoors=1+Math.floor(floor/5);
+  for(let i=0;i<numDoors;i++){
+    let dx,dy,tc=0;
+    do{
+      dx=2+Math.floor(Math.random()*(MAP_W-4));
+      dy=2+Math.floor(Math.random()*(MAP_H-4));
+      tc++;
+    }while(map[dy][dx]!==T.FLOOR&&tc<20);
+    map[dy][dx]=T.DOOR;
+    entities.doors.push({x:dx,y:dy,open:false});
+  }
+  // Chests
+  const numChests=1;
+  for(let i=0;i<numChests;i++){
+    let cx,cy,tc=0;
+    do{
+      cx=1+Math.floor(Math.random()*(MAP_W-2));
+      cy=1+Math.floor(Math.random()*(MAP_H-2));
+      tc++;
+    }while((cx<px+2&&cy<py+2)||map[cy][cx]!==T.FLOOR&&tc<20);
+    map[cy][cx]=T.CHEST;
+    entities.chests.push({x:cx,y:cy,opened:false});
+  }
+  return{map,entities,idx:{px,py}};
+}
+
+function getMapData(floor){
+  if(floor<=10){
+    return parseMap(FLOOR_MAPS[floor-1],floor);
+  }
+  return genMap(floor);
+}
+
+// Game state
+let gs={};
+
+function initState(){
+  gs={
+    floor:1,
+    hp:1000,maxHp:1000,
+    atk:10,def:5,
+    gold:0,keys:3,
+    px:1,py:1,
+    entities:null,
+    map:null,
+    menuOpen:false,
+    inBattle:false,
+    won:false
+  };
+}
+
+function loadFloor(floor){
+  const data=getMapData(floor);
+  gs.map=data.map;
+  gs.entities=data.entities;
+  if(data.idx){
+    gs.px=data.idx.px;
+    gs.py=data.idx.py;
+  }
+  render();
+  updateHUD();
+}
+
+function render(){
+  const canvas=document.getElementById('canvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=MAP_W*TILE;
+  canvas.height=MAP_H*TILE;
+  ctx.imageSmoothingEnabled=false;
+
+  const {map,entities,px,py}=gs;
+  // Draw tiles
+  for(let y=0;y<MAP_H;y++){
+    for(let x=0;x<MAP_W;x++){
+      const t=map[y][x];
+      if(t===T.WALL){
+        ctx.fillStyle='#4a4a6a';
+        ctx.fillRect(x*TILE,y*TILE,TILE,TILE);
+        ctx.strokeStyle='#3a3a5a';
+        ctx.strokeRect(x*TILE,y*TILE,TILE,TILE);
+      } else if(t===T.FLOOR){
+        ctx.fillStyle='#2a2a4a';
+        ctx.fillRect(x*TILE,y*TILE,TILE,TILE);
+        // Grid dots
+        ctx.fillStyle='#3a3a5a';
+        ctx.beginPath();
+        ctx.arc(x*TILE+TILE/2,y*TILE+TILE/2,1,0,Math.PI*2);
+        ctx.fill();
+      } else if(t===T.DOOR){
+        const door=entities.doors.find(d=>d.x===x&&d.y===y);
+        ctx.fillStyle='#2a2a4a';
+        ctx.fillRect(x*TILE,y*TILE,TILE,TILE);
+        ctx.fillStyle=door&&door.open?'#555':'#2980b9';
+        ctx.fillRect(x*TILE+2,y*TILE+2,TILE-4,TILE-4);
+        ctx.fillStyle='#fff';
+        ctx.font=`${TILE-6}px Arial`;
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        ctx.fillText('🔒',x*TILE+TILE/2,y*TILE+TILE/2);
+      } else if(t===T.CHEST){
+        ctx.fillStyle='#2a2a4a';
+        ctx.fillRect(x*TILE,y*TILE,TILE,TILE);
+        const chest=entities.chests.find(c=>c.x===x&&c.y===y);
+        ctx.font=`${TILE-4}px Arial`;
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        ctx.fillText(chest&&chest.opened?'📦':'🎁',x*TILE+TILE/2,y*TILE+TILE/2);
+      }
+    }
+  }
+
+  // Draw stairs
+  if(entities.stairs){
+    const{sx,sy}=entities.stairs;
+    ctx.font=`${TILE-4}px Arial`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText('🚪',sx*TILE+TILE/2,sy*TILE+TILE/2);
+  }
+
+  // Draw keys
+  for(const k of entities.keys){
+    ctx.font=`${TILE-4}px Arial`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText('🔑',k.x*TILE+TILE/2,k.y*TILE+TILE/2);
+  }
+
+  // Draw enemies
+  for(const e of entities.enemies){
+    ctx.font=`${TILE-4}px Arial`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(e.emoji,e.x*TILE+TILE/2,e.y*TILE+TILE/2);
+  }
+
+  // Draw player
+  ctx.font=`${TILE-2}px Arial`;
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText('🧙',px*TILE+TILE/2,py*TILE+TILE/2);
+}
+
+function updateHUD(){
+  document.getElementById('floorNum').textContent=gs.floor;
+  document.getElementById('curHp').textContent=gs.hp;
+  document.getElementById('maxHp').textContent=gs.maxHp;
+  document.getElementById('hpFill').style.width=(gs.hp/gs.maxHp*100)+'%';
+  document.getElementById('gold').textContent=gs.gold;
+  document.getElementById('keys').textContent=gs.keys;
+}
+
+function showMsg(text,dur=1500){
+  const el=document.getElementById('msg');
+  el.textContent=text;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+function move(dx,dy){
+  if(gs.menuOpen||gs.inBattle||gs.won)return;
+  const nx=gs.px+dx,ny=gs.py+dy;
+  if(nx<0||nx>=MAP_W||ny<0||ny>=MAP_H)return;
+  const t=gs.map[ny][nx];
+  if(t===T.WALL)return;
+  if(t===T.DOOR){
+    const door=gs.entities.doors.find(d=>d.x===nx&&d.y===ny);
+    if(door&&!door.open){
+      if(gs.keys>0){
+        gs.keys--;
+        door.open=true;
+        gs.map[ny][nx]=T.FLOOR;
+        showMsg('🔓 消耗1把钥匙开门！');
+        render();updateHUD();
+        return;
+      } else {
+        showMsg('需要钥匙才能打开蓝色门！');
+        return;
+      }
+    }
+  }
+  // Check enemy collision
+  const enemyIdx=gs.entities.enemies.findIndex(e=>e.x===nx&&e.y===ny);
+  if(enemyIdx!==-1){
+    startBattle(gs.entities.enemies[enemyIdx],enemyIdx);
+    return;
+  }
+  // Check key pickup
+  const keyIdx=gs.entities.keys.findIndex(k=>k.x===nx&&k.y===ny);
+  if(keyIdx!==-1){
+    gs.keys+=gs.entities.keys[keyIdx].count;
+    gs.entities.keys.splice(keyIdx,1);
+    showMsg('🔑 获得钥匙！');
+  }
+  // Check chest
+  const chest=gs.entities.chests.find(c=>c.x===nx&&c.y===ny&&!c.opened);
+  if(chest){
+    chest.opened=true;
+    const reward=20+gs.floor*5+Math.floor(Math.random()*20);
+    gs.gold+=reward;
+    gs.map[ny][nx]=T.FLOOR;
+    showMsg(`📦 宝橙色箱！金币+${reward}`);
+  }
+  // Move player
+  gs.px=nx;gs.py=ny;
+  render();
+  updateHUD();
+  // Move enemies
+  moveEnemies();
+  // Check stairs
+  if(gs.entities.stairs&&nx===gs.entities.stairs.x&&ny===gs.entities.stairs.y){
+    nextFloor();
+  }
+}
+
+function moveEnemies(){
+  for(const e of gs.entities.enemies){
+    // Simple: move toward player if within range
+    const dx=gs.px-e.x,dy=gs.py-e.y;
+    const dist=Math.abs(dx)+Math.abs(dy);
+    if(dist>5)continue;
+    let mx=0,my=0;
+    if(Math.abs(dx)>Math.abs(dy)){
+      mx=dx>0?1:-1;
+    } else {
+      my=dy>0?1:-1;
+    }
+    const nx=e.x+mx,ny=e.y+my;
+    if(nx>=0&&nx<MAP_W&&ny>=0&&ny<MAP_H){
+      if(gs.map[ny][nx]===T.FLOOR&&!(nx===gs.px&&ny===gs.py)&&!gs.entities.enemies.some(e2=>e2!==e&&e2.x===nx&&e2.y===ny)){
+        e.x=nx;e.y=ny;
+      }
+    }
+  }
+  // Check if enemy walked into player
+  const enemyCollide=gs.entities.enemies.find(e=>e.x===gs.px&&e.y===gs.py);
+  if(enemyCollide){
+    startBattle(enemyCollide,gs.entities.enemies.indexOf(enemy

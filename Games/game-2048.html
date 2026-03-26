@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>2048 怀旧版 🔢</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Courier New', monospace;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 12px;
+  }
+  .title {
+    font-size: 2rem;
+    color: #FF6B6B;
+    text-shadow: 3px 3px 0 #8B0000, 0 0 20px #FF6B6B44;
+    letter-spacing: 4px;
+    font-weight: bold;
+  }
+  .scores {
+    display: flex;
+    gap: 8px;
+  }
+  .score-box {
+    background: #16213e;
+    border: 2px solid #FF6B6B;
+    border-radius: 8px;
+    padding: 6px 14px;
+    text-align: center;
+    min-width: 80px;
+  }
+  .score-label {
+    font-size: 0.65rem;
+    color: #FF6B6B;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .score-value {
+    font-size: 1.4rem;
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 0 0 10px #FF6B6B88;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    background: #0f3460;
+    border: 3px solid #FF6B6B;
+    border-radius: 12px;
+    padding: 10px;
+    width: 100%;
+    aspect-ratio: 1;
+    position: relative;
+    box-shadow: 0 0 30px #FF6B6B33, inset 0 0 20px #00000066;
+  }
+  .cell {
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: clamp(1.5rem, 8vw, 2.5rem);
+    transition: transform 80ms ease;
+    position: relative;
+  }
+  .cell-0    { background: #16213e; }
+  .cell-2    { background: #eee8d5; color: #4a4a4a; }
+  .cell-4    { background: #ede0c8; color: #4a4a4a; }
+  .cell-8    { background: #f2b179; color: #fff; }
+  .cell-16   { background: #f59563; color: #fff; }
+  .cell-32   { background: #f67c5f; color: #fff; }
+  .cell-64   { background: #f65e3b; color: #fff; }
+  .cell-128  { background: #edcf72; color: #fff; text-shadow: 0 0 10px #edcf7288; font-size: clamp(1.2rem, 6vw, 2rem); }
+  .cell-256  { background: #edcc61; color: #fff; text-shadow: 0 0 10px #edcc6188; font-size: clamp(1.2rem, 6vw, 2rem); }
+  .cell-512  { background: #edc850; color: #fff; text-shadow: 0 0 10px #edc85088; font-size: clamp(1.2rem, 6vw, 2rem); }
+  .cell-1024 { background: #edc53f; color: #fff; text-shadow: 0 0 10px #edc53f88; font-size: clamp(1rem, 5vw, 1.6rem); }
+  .cell-2048 { background: #edc22e; color: #fff; text-shadow: 0 0 15px #edc22eaa; font-size: clamp(1rem, 5vw, 1.6rem); animation: win-pulse 0.6s ease infinite alternate; }
+  .cell-super { background: #3c3a32; color: #fff; font-size: clamp(0.9rem, 4vw, 1.4rem); }
+
+  @keyframes pop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+  @keyframes win-pulse {
+    0%   { box-shadow: 0 0 10px #edc22e88; }
+    100% { box-shadow: 0 0 30px #edc22e; }
+  }
+  .pop { animation: pop 150ms ease; }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    z-index: 10;
+    display: none;
+  }
+  .overlay.show { display: flex; }
+  .overlay-title {
+    font-size: 2rem;
+    color: #FF6B6B;
+    text-shadow: 3px 3px 0 #8B0000;
+    letter-spacing: 4px;
+  }
+  .overlay-sub {
+    font-size: 1rem;
+    color: #fff;
+    opacity: 0.8;
+  }
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+  .btn {
+    background: #FF6B6B;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    box-shadow: 3px 3px 0 #8B0000;
+    transition: transform 60ms, box-shadow 60ms;
+    min-width: 120px;
+  }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #8B0000; }
+  .hint {
+    color: #888;
+    font-size: 0.75rem;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="title">2048 🔢</div>
+  <div class="header">
+    <div class="scores">
+      <div class="score-box">
+        <div class="score-label">分数</div>
+        <div class="score-value" id="score">0</div>
+      </div>
+      <div class="score-box">
+        <div class="score-label">最高</div>
+        <div class="score-value" id="best">0</div>
+      </div>
+    </div>
+  </div>
+  <div class="board" id="board">
+    <div class="overlay" id="overlay">
+      <div class="overlay-title" id="overlay-title">游戏结束</div>
+      <div class="overlay-sub" id="overlay-sub"></div>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="btn" id="btn-new">新游戏</button>
+    <button class="btn" id="btn-continue" style="display:none">继续</button>
+  </div>
+  <div class="hint">方向键 或 滑动屏幕</div>
+</div>
+
+<script>
+(function() {
+  const SIZE = 4;
+  let grid = [], score = 0, best = 0, won = false, over = false;
+  let cellEls = [];
+
+  const boardEl = document.getElementById('board');
+  const scoreEl = document.getElementById('score');
+  const bestEl  = document.getElementById('best');
+  const overlay = document.getElementById('overlay');
+  const overlayTitle = document.getElementById('overlay-title');
+  const overlaySub   = document.getElementById('overlay-sub');
+  const btnNew     = document.getElementById('btn-new');
+  const btnContinue = document.getElementById('btn-continue');
+
+  best = parseInt(localStorage.getItem('2048-best') || '0');
+
+  function buildCells() {
+    while (boardEl.children.length > 1) boardEl.removeChild(boardEl.lastChild);
+    cellEls = [];
+    for (let i = 0; i < SIZE * SIZE; i++) {
+      const el = document.createElement('div');
+      el.className = 'cell';
+      boardEl.appendChild(el);
+      cellEls.push(el);
+    }
+  }
+
+  function idx(r, c) { return r * SIZE + c; }
+
+  function init() {
+    grid = Array.from({length: SIZE}, () => Array(SIZE).fill(0));
+    score = 0; won = false; over = false;
+    overlay.classList.remove('show');
+    btnContinue.style.display = 'none';
+    addTile(); addTile();
+    render();
+    updateScore();
+  }
+
+  function addTile() {
+    let empty = [];
+    for (let r = 0; r < SIZE; r++)
+      for (let c = 0; c < SIZE; c++)
+        if (!grid[r][c]) empty.push([r, c]);
+    if (!empty.length) return;
+    const [r, c] = empty[Math.floor(Math.random() * empty.length)];
+    grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+  }
+
+  function render() {
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        const el = cellEls[idx(r, c)];
+        const v  = grid[r][c];
+        el.className = 'cell' + (v > 2048 ? ' cell-super' : ' cell-' + v);
+        el.textContent = v || '';
+      }
+    }
+  }
+
+  function updateScore() {
+    scoreEl.textContent = score;
+    if (score > best) {
+      best = score;
+      localStorage.setItem('2048-best', best);
+    }
+    bestEl.textContent = best;
+  }
+
+  function popCell(r, c) {
+    const el = cellEls[idx(r, c)];
+    el.classList.remove('pop');
+    void el.offsetWidth;
+    el.classList.add('pop');
+  }
+
+  // Slide & merge one row to the left
+  function slideRow(row) {
+    let arr = row.filter(v => v);
+    let merged = [], points = 0;
+    for (let i = 0; i < arr.length; i++) {
+      if (i + 1 < arr.length && arr[i] === arr[i + 1]) {
+        const nv = arr[i] * 2;
+        merged.push(nv);
+        points += nv;
+        i++;
+      } else {
+        merged.push(arr[i]);
+      }
+    }
+    while (merged.length < SIZE) merged.push(0);
+    return { row: merged, points };
+  }
+
+  function move(dir) {
+    if (over && !won) return;
+    let moved = false;
+    let points = 0;
+    let mergePos = [];
+
+    const g2 = grid.map(r => [...r]);
+
+    if (dir === 'left') {
+      for (let r = 0; r < SIZE; r++) {
+        const { row, points: p } = slideRow(g2[r]);
+        if (row.join() !== g2[r].join()) moved = true;
+        g2[r] = row;
+        points += p;
+        row.forEach((v, c) => { if (v > 0 && (c === 0 || g2[r][c] !== g2[r][c-1] || row[c-1] === 0)) {} });
+      }
+    } else if (dir === 'right') {
+      for (let r = 0; r < SIZE; r++) {
+        const { row, points: p } = slideRow([...g2[r]].reverse());
+        const rev = row.reverse();
+        if (rev.join() !== g2[r].join()) moved = true;
+        g2[r] = rev;
+        points += p;
+      }
+    } else if (dir === 'up') {
+      for (let c = 0; c < SIZE; c++) {
+        const col = [g2[0][c], g2[1][c], g2[2][c], g2[3][c]];
+        const { row, points: p } = slideRow(col);
+        for (let r = 0; r < SIZE; r++) {
+          if (g2[r][c] !== row[r]) moved = true;
+          g2[r][c] = row[r];
+        }
+        points += p;
+      }
+    } else if (dir === 'down') {
+      for (let c = 0; c < SIZE; c++) {
+        const col = [g2[0][c], g2[1][c], g2[2][c], g2[3][c]].reverse();
+        const { row, points: p } = slideRow(col);
+        const rev = row.reverse();
+        for (let r = 0; r < SIZE; r++) {
+          if (g2[r][c] !== rev[r]) moved = true;
+          g2[r][c] = rev[r];
+        }
+        points += p;
+      }
+    }
+
+    if (!moved) return;
+
+    grid = g2;
+    score += points;
+
+    // Find merge positions for pop animation
+    if (points > 0) {
+      for (let r = 0; r < SIZE; r++)
+        for (let c = 0; c < SIZE; c++)
+          if (grid[r][c] > 0 && grid[r][c] !== g2[r][c]) {}
+    }
+
+    addTile();
+    render();
+    updateScore();
+
+    // Pop animation on changed cells
+    setTimeout(() => {
+      for (let r = 0; r < SIZE; r++)
+        for (let c = 0; c < SIZE; c++)
+          if (grid[r][c] > 0 && grid[r][c] !== g2[r][c])
+            popCell(r, c);
+    }, 10);
+
+    // Check win
+    if (!won) {
+      outer: for (let r = 0; r < SIZE; r++)
+        for (let c = 0; c < SIZE; c++)
+          if (grid[r][c] === 2048) { won = true; break outer; }
+      if (won) {
+        overlayTitle.textContent = '🎉 你赢了！';
+        overlaySub.textContent = '可以继续玩哦~';
+        overlay.classList.add('show');
+        btnContinue.style.display = 'inline-block';
+      }
+    }
+
+    // Check over
+    if (!canMove()) {
+      over = true;
+      overlayTitle.textContent = '💀 游戏结束';
+      overlaySub.textContent = '分数: ' + score;
+      overlay.classList.add('show');
+    }
+  }
+
+  function canMove() {
+    for (let r = 0; r < SIZE; r++)
+      for (let c = 0; c < SIZE; c++) {
+        if (!grid[r][c]) return true;
+        if (c < SIZE - 1 && grid[r][c] === grid[r][c+1]) return true;
+        if (r < SIZE - 1 && grid[r][c] === grid[r+1][c]) return true;
+      }
+    return false;
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    const map = {
+      ArrowLeft: 'left', ArrowRight: 'right',
+      ArrowUp: 'up', ArrowDown: 'down'
+    };
+    if (map[e.key]) { e.preventDefault(); move(map[e.key]); }
+  });
+
+  // Touch swipe
+  let tx0, ty0;
+  boardEl.addEventListener('touchstart', e => {
+    tx0 = e.touches[0].clientX;
+    ty0 = e.touches[0].clientY;
+  }, { passive: true });
+  boardEl.addEventListener('touchend', e => {
+    if (tx0 == null) return;
+    const dx = e.changedTouches[0].clientX - tx0;
+    const dy = e.changedTouches[0].clientY - ty0;
+    const adx = Math.abs(dx), ady = Math.abs(dy);
+    if (Math.max(adx, ady) < 20) return;
+    if (adx > ady) move(dx > 0 ? 'right' : 'left');
+    else          move(dy > 0 ? 'down'  : 'up');
+  }, { passive: true });
+
+  // Also allow swiping on the whole page
+  document.addEventListener('touchend', e => {
+    if (e.target.closest('.btn') || e.target.closest('.hint')) return;
+    if (tx0 == null) return;
+    const dx = e.changedTouches[0].clientX - tx0;
+    const dy = e.changedTouches[0].clientY - ty0;
+    const adx = Math.abs(dx), ady = Math.abs(dy);
+    if (Math.max(adx, ady) < 30) return;
+    if (adx > ady) move(dx > 0 ? 'right' : 'left');
+    else          move(dy > 0 ? 'down'  : 'up');
+  }, { passive: true });
+
+  btnNew.addEventListener('click', init);
+  btnContinue.addEventListener('click', () => {
+    over = false;
+    overlay.classList.remove('show');
+  });
+
+  buildCells();
+  init();
+})();
+</script>
+</body>
+</html>
