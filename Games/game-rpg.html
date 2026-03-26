@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>⚔️ 像素勇者 - 时光机</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,sans-serif;overflow:hidden}
+h1{color:#fff;font-size:16px;margin-bottom:8px;text-align:center;letter-spacing:2px}
+#gameCanvas{background:#0a0a1a;border:2px solid #333;border-radius:8px;image-rendering:pixelated;max-width:100%}
+.ui-bar{display:flex;gap:8px;margin:8px 0;width:100%;max-width:480px;padding:0 8px}
+.stat-box{flex:1;background:#16213e;border-radius:8px;padding:6px 8px;color:#fff;font-size:11px}
+.stat-label{color:#888;font-size:9px;margin-bottom:2px}
+.hp-bar{height:8px;background:#333;border-radius:4px;overflow:hidden;margin-top:2px}
+.hp-fill{height:100%;border-radius:4px;transition:width .2s}
+.hp-fill.hp{background:#ff4757}
+.hp-fill.mp{background:#3742fa}
+.msg{color:#aaa;font-size:12px;margin:6px 0;text-align:center;min-height:18px}
+.controls{margin-top:8px;display:grid;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(2,44px);gap:4px;justify-content:center}
+.ctrl{display:flex;align-items:center;justify-content:center;background:#16213e;border:none;border-radius:8px;color:#fff;font-size:18px;cursor:pointer;touch-action:manipulation}
+.ctrl:active{background:#1e2d4d;transform:scale(.95)}
+.ctrl-wide{grid-column:span 3}
+.ctrl-skill{background:#7c3aed}
+.ctrl-skill.cooldown{background:#333;color:#555}
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10}
+#overlay h2{color:#fff;font-size:28px;margin-bottom:16px}
+#overlay p{color:#aaa;font-size:14px;margin:6px 0}
+.btn{padding:10px 28px;background:#ff6b6b;color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer;margin-top:12px}
+.btn:active{transform:scale(.96)}
+.shop{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:12}
+.shop h2{color:#fff;font-size:20px;margin-bottom:12px}
+.shop-item{display:flex;gap:12px;margin:8px 0;align-items:center}
+.shop-item button{padding:6px 16px;background:#ff6b6b;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer}
+.shop-close{margin-top:12px;padding:8px 24px;background:#444;color:#fff;border:none;border-radius:6px;cursor:pointer}
+.dpad{position:fixed;bottom:20px;left:20px;display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:2px}
+.dpad-btn{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.15);border:none;border-radius:8px;color:#fff;font-size:18px;cursor:pointer;touch-action:manipulation}
+.dpad-btn:active{background:rgba(255,255,255,.3)}
+</style>
+</head>
+<body>
+<h1>⚔️ 像素勇者</h1>
+<div class="ui-bar">
+  <div class="stat-box"><div class="stat-label">HP</div><div class="hp-bar"><div class="hp-fill hp" id="hpFill" style="width:100%"></div></div><span id="hpText">100/100</span></div>
+  <div class="stat-box"><div class="stat-label">MP</div><div class="hp-bar"><div class="hp-fill mp" id="mpFill" style="width:100%"></div></div><span id="mpText">100/100</span></div>
+  <div class="stat-box"><div class="stat-label">等级</div><span id="levelText">Lv.1</span> <span id="goldText">💰0</span></div>
+</div>
+<canvas id="gameCanvas" width="480" height="320"></canvas>
+<div class="msg" id="msg">WASD移动，空格技能，消灭怪物升级！</div>
+<div class="controls">
+  <div class="ctrl" style="visibility:hidden"></div>
+  <div class="ctrl" id="btnUp">↑</div>
+  <div class="ctrl" style="visibility:hidden"></div>
+  <div class="ctrl" id="btnLeft">←</div>
+  <div class="ctrl" id="btnDown">↓</div>
+  <div class="ctrl" id="btnRight">→</div>
+  <div class="ctrl ctrl-wide ctrl-skill" id="btnSkill">🔥 火球术</div>
+</div>
+<canvas id="dpadCanvas" class="dpad" width="138" height="138" style="display:none"></canvas>
+
+<div id="overlay" style="display:none">
+  <h2 id="overlayTitle">像素勇者</h2>
+  <p id="overlayDesc">WASD移动，消灭所有敌人！</p>
+  <button class="btn" id="overlayBtn" onclick="startGame()">开始冒险</button>
+</div>
+
+<div class="shop" id="shop" style="display:none">
+  <h2>🏪 商店</h2>
+  <div class="shop-item"><span>❤️ +50 HP</span><button onclick="buyItem('hp')">💰20</button></div>
+  <div class="shop-item"><span>⚔️ +5 攻击</span><button onclick="buyItem('atk')">💰50</button></div>
+  <div class="shop-item"><span>🛡️ +3 防御</span><button onclick="buyItem('def')">💰50</button></div>
+  <button class="shop-close" onclick="closeShop()">继续前进</button>
+</div>
+
+<script>
+// Game State
+const G = {
+  hp:100, maxHp:100,
+  mp:100, maxMp:100,
+  atk:10, def:5,
+  exp:0, level:1, gold:0,
+  x:2, y:2,
+  map:[], monsters:[],
+  chapter:1, section:1,
+  skillCd:0,
+  items:{weapon:null,armor:null}
+};
+
+const TILE=32;
+const COLS=15,ROWS=10;
+
+// Chapter data
+const CHAPTERS=[
+  {name:'🌲 新手森林',enemies:[
+    {emoji:'🐌',name:'史莱姆',hp:30,atk:5,def:0,exp:10,gold:5},
+    {emoji:'👺',name:'哥布林',hp:50,atk:8,def:2,exp:20,gold:10}
+  ],boss:{emoji:'🌲',name:'树精长老',hp:200,atk:15,def:5,exp:100,gold:50}},
+  {name:'🌋 火山洞穴',enemies:[
+    {emoji:'🔥',name:'火元素',hp:80,atk:18,def:5,exp:30,gold:15}
+  ],boss:{emoji:'🐲',name:'火焰巨龙',hp:400,atk:30,def:10,exp:200,gold:100}},
+  {name:'❄️ 冰霜要塞',enemies:[
+    {emoji:'❄️',name:'冰精灵',hp:120,atk:25,def:8,exp:50,gold:25}
+  ],boss:{emoji:'🧊',name:'冰霜巨人',hp:600,atk:40,def:15,exp:300,gold:150}}
+];
+
+// Tile types: 0=floor, 1=wall, 2=exit
+function genMap(chapter) {
+  const m=[];
+  for(let y=0;y<ROWS;y++){
+    const row=[];
+    for(let x=0;x<COLS;x++){
+      if(y===0||y===ROWS-1||x===0||x===COLS-1) row.push(1);
+      else row.push(0);
+    }
+    m.push(row);
+  }
+  // Random walls
+  for(let i=0;i<8;i++){
+    const wx=1+Math.floor(Math.random()*(COLS-2));
+    const wy=1+Math.floor(Math.random()*(ROWS-2));
+    if(wx!==G.x||wy!==G.y) m[wy][wx]=1;
+  }
+  // Exit
+  m[ROWS-2][COLS-2]=2;
+  return m;
+}
+
+function spawnMonsters(chapter,section){
+  const ch=CHAPTERS[chapter-1];
+  const enemies=[];
+  const count=2+section;
+  for(let i=0;i<count;i++){
+    let ex,ey;
+    do{
+      ex=1+Math.floor(Math.random()*(COLS-2));
+      ey=1+Math.floor(Math.random()*(ROWS-2));
+    }while((ex===G.x&&ey===G.y)||(ex===COLS-2&&ey===ROWS-2));
+    const template=ch.enemies[Math.floor(Math.random()*ch.enemies.length)];
+    enemies.push({...template,x:ex,y:ey,alive:true});
+  }
+  // Boss in last section
+  if(section===3){
+    let bx,by;
+    do{
+      bx=1+Math.floor(Math.random()*(COLS-2));
+      by=1+Math.floor(Math.random()*(ROWS-2));
+    }while((bx===G.x&&by===G.y));
+    enemies.push({...ch.boss,x:bx,y:by,alive:true});
+  }
+  return enemies;
+}
+
+function draw(){
+  const canvas=document.getElementById('gameCanvas');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // Draw tiles
+  for(let y=0;y<ROWS;y++){
+    for(let x=0;x<COLS;x++){
+      const t=G.map[y][x];
+      if(t===1){ctx.fillStyle='#2d2d44';ctx.fillRect(x*TILE,y*TILE,TILE,TILE);}
+      else if(t===2){ctx.fillStyle='#fbbf24';ctx.fillRect(x*TILE,y*TILE,TILE,TILE);}
+      ctx.strokeStyle='#1a1a2e';ctx.strokeRect(x*TILE,y*TILE,TILE,TILE);
+    }
+  }
+  // Draw monsters
+  G.monsters.forEach(m=>{
+    if(!m.alive) return;
+    ctx.font='22px serif';ctx.textAlign='center';
+    ctx.fillText(m.emoji,(m.x+.5)*TILE,(m.y+.7)*TILE);
+    // HP bar
+    const ratio=m.hp/(m.maxHp||1);
+    ctx.fillStyle='#333';ctx.fillRect(m.x*TILE+2,(m.y+.1)*TILE,TILE-4,3);
+    ctx.fillStyle='#ff4757';ctx.fillRect(m.x*TILE+2,(m.y+.1)*TILE,(TILE-4)*ratio,3);
+  });
+  // Draw player
+  ctx.font='22px serif';ctx.textAlign='center';
+  ctx.fillText('🧙',(G.x+.5)*TILE,(G.y+.7)*TILE);
+  // Draw chapter
+  ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,canvas.width,20);
+  ctx.fillStyle='#fff';ctx.font='11px sans-serif';ctx.textAlign='left';
+  ctx.fillText(`${CHAPTERS[G.chapter-1].name} 第${G.section}节`,4,14);
+}
+
+function updateUI(){
+  document.getElementById('hpFill').style.width=(G.hp/G.maxHp*100)+'%';
+  document.getElementById('mpFill').style.width=(G.mp/G.maxMp*100)+'%';
+  document.getElementById('hpText').textContent=G.hp+'/'+G.maxHp;
+  document.getElementById('mpText').textContent=G.mp+'/'+G.maxMp;
+  document.getElementById('levelText').textContent='Lv.'+G.level;
+  document.getElementById('goldText').textContent='💰'+G.gold;
+  const skillBtn=document.getElementById('btnSkill');
+  if(G.skillCd>0){skillBtn.textContent='⏳'+G.skillCd+'s';skillBtn.classList.add('cooldown');}
+  else{skillBtn.textContent='🔥 火球';skillBtn.classList.remove('cooldown');}
+}
+
+function move(dx,dy){
+  const nx=G.x+dx,ny=G.y+dy;
+  if(nx<0||nx>=COLS||ny<0||ny>=ROWS) return;
+  if(G.map[ny][nx]===1) return;
+  // Check monster collision
+  const m=G.monsters.find(m=>m.alive&&m.x===nx&&m.y===ny);
+  if(m){fight(m);return;}
+  G.x=nx;G.y=ny;
+  // Check exit
+  if(G.map[ny][nx]===2){nextSection();return;}
+  draw();
+}
+
+function fight(m){
+  const dmg=Math.max(1,G.atk-m.def);
+  m.hp-=dmg;
+  showMsg(`⚔️ 攻击${m.name}，伤害${dmg}`);
+  if(m.hp<=0){
+    m.alive=false;
+    G.exp+=m.exp;G.gold+=m.gold;
+    showMsg(`🎉 击败${m.name}！经验+${m.exp} 金币+${m.gold}`);
+    checkLevelUp();
+    // Check all dead
+    if(G.monsters.every(m=>!m.alive)){openShop();}
+  }
+  // Monster counter
+  const myDmg=Math.max(1,m.atk-G.def);
+  G.hp-=myDmg;
+  showMsg(`💥 ${m.name}反击，伤害${myDmg}`);
+  if(G.hp<=0){gameOver();return;}
+  draw();updateUI();
+}
+
+function castSkill(){
+  if(G.skillCd>0||G.mp<20) return;
+  G.mp-=20;G.skillCd=5;
+  // Find nearest monster
+  let nearest=null,minDist=99;
+  G.monsters.forEach(m=>{
+    if(!m.alive) return;
+    const d=Math.abs(m.x-G.x)+Math.abs(m.y-G.y);
+    if(d<minDist){minDist=d;nearest=m;}
+  });
+  if(nearest){
+    const dmg=Math.max(1,G.atk*2-nearest.def);
+    nearest.hp-=dmg;
+    showMsg(`🔥 火球术！伤害${dmg}`);
+    if(nearest.hp<=0){
+      nearest.alive=false;
+      G.exp+=nearest.exp;G.gold+=nearest.gold;
+      showMsg(`🔥 击败${nearest.name}！经验+${nearest.exp}`);
+      checkLevelUp();
+      if(G.monsters.every(m=>!m.alive))openShop();
+    }
+  }
+  draw();updateUI();
+}
+
+function checkLevelUp(){
+  while(G.exp>=G.level*100){
+    G.exp-=G.level*100;
+    G.level++;
+    G.maxHp+=20;G.hp=G.maxHp;
+    G.atk+=3;G.def+=2;
+    showMsg(`⬆️ 升级！等级${G.level}！属性提升！`);
+  }
+}
+
+function nextSection(){
+  G.section++;
+  if(G.section>3){G.chapter++;G.section=1;showMsg('🏆 进入第'+G.chapter+'章！');}
+  else{showMsg('🚪 进入第'+G.section+'节');}
+  if(G.chapter>3){winGame();return;}
+  G.map=genMap(G.chapter);
+  G.monsters=spawnMonsters(G.chapter,G.section);
+  G.x=2;G.y=2;
+  draw();updateUI();
+}
+
+function openShop(){
+  document.getElementById('shop').style.display='flex';
+}
+function closeShop(){
+  document.getElementById('shop').style.display='none';
+}
+function buyItem(type){
+  if(type==='hp'){if(G.gold>=20){G.gold-=20;G.hp=Math.min(G.maxHp,G.hp+50);showMsg('❤️ 购买+50HP');}}
+  else if(type==='atk'){if(G.gold>=50){G.gold-=50;G.atk+=5;showMsg('⚔️ 攻击+5！');}}
+  else if(type==='def'){if(G.gold>=50){G.gold-=50;G.def+=3;showMsg('🛡️ 防御+3！');}}
+  updateUI();
+}
+
+function showMsg(t){document.getElementById('msg').textContent=t;}
+
+function gameOver(){
+  document.getElementById('overlayTitle').textContent='💀 失败';
+  document.getElementById('overlayDesc').textContent='你在第'+G.chapter+'章第'+G.section+'节倒下了';
+  document.getElementById('overlayBtn').textContent='重新开始';
+  document.getElementById('overlay').style.display='flex';
+}
+function winGame(){
+  document.getElementById('overlayTitle').textContent='🏆 通关！';
+  document.getElementById('overlayDesc').textContent='你击败了所有BOSS，成为了真正的勇者！';
+  document.getElementById('overlayBtn').textContent='再玩一次';
+  document.getElementById('overlay').style.display='flex';
+}
+
+function startGame(){
+  G.hp=100;G.maxHp=100;G.mp=100;G.maxMp=100;
+  G.atk=10;G.def=5;G.exp=0;G.level=1;G.gold=0;
+  G.x=2;G.y=2;G.chapter=1;G.section=1;G.skillCd=0;
+  G.map=genMap(1);
+  G.monsters=spawnMonsters(1,1);
+  document.getElementById('overlay').style.display='none';
+  document.getElementById('shop').style.display='none';
+  showMsg('WASD移动，消灭怪物！空格火球术！');
+  draw();updateUI();
+}
+
+// Input
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('overlay').style.display!=='none')return;
+  if(e.key==='w'||e.key==='W'||e.key==='ArrowUp')move(0,-1);
+  if(e.key==='s'||e.key==='S'||e.key==='ArrowDown')move(0,1);
+  if(e.key==='a'||e.key==='A'||e.key==='ArrowLeft')move(-1,0);
+  if(e.key==='d'||e.key==='D'||e.key==='ArrowRight')move(1,0);
+  if(e.key===' ')castSkill();
+});
+
+// Touch controls
+['Up','Down','Left','Right'].forEach(dir=>{
+  const btn=document.getElementById('btn'+dir);
+  if(!btn)return;
+  let iv;
+  const start=()=>iv=setInterval(()=>{
+    if(dir==='Up')move(0,-1);if(dir==='Down')move(0,1);
+    if(dir==='Left')move(-1,0);if(dir==='Right')move(1,0);
+  },120);
+  btn.addEventListener('touchstart',e=>{e.preventDefault();start();});
+  btn.addEventListener('touchend',()=>clearInterval(iv));
+  btn.addEventListener('mousedown',start);
+  btn.addEventListener('mouseup',()=>clearInterval(iv));
+});
+document.getElementById('btnSkill').addEventListener('click',castSkill);
+
+// Skill cooldown timer
+setInterval(()=>{
+  if(G.skillCd>0){G.skillCd--;updateUI();}
+  // MP regen
+  if(G.mp<G.maxMp){G.mp=Math.min(G.maxMp,G.mp+1);updateUI();}
+},1000);
+
+// Mobile dpad
+const isMobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
+if(isMobile){
+  document.getElementById('dpadCanvas').style.display='block';
+  const dp=document.getElementById('dpadCanvas').getContext('2d');
+  dp.fillStyle='rgba(255,255,255,.1)';
+  dp.fillRect(44,0,50,50);dp.fillRect(0,44,50,50);dp.fillRect(88,44,50,50);dp.fillRect(44,88,50,50);
+}
+
+// Init
+document.getElementById('overlayTitle').textContent='⚔️ 像素勇者';
+document.getElementById('overlayDesc').textContent='WASD移动，消灭森林、火山、冰霜的怪物，挑战最终BOSS！\n升级、买装备，成为真正的勇者！';
+document.getElementById('overlayBtn').textContent='开始冒险';
+document.getElementById('overlay').style.display='flex';
+</script>
+</body>
+</html>

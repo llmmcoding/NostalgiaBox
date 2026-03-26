@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🌲 魔塔·暗黑森林 - 时光机</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1117;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,sans-serif;color:#c9d1d9}
+h2{color:#f0f6fc;font-size:14px;margin:6px 0;text-align:center;letter-spacing:1px}
+#c{background:#161b22;border:1px solid #30363d;border-radius:6px;image-rendering:pixelated;max-width:100%}
+.info{display:flex;gap:6px;margin:6px 0;width:100%;max-width:500px;padding:0 4px;flex-wrap:wrap}
+.box{flex:1;background:#161b22;border:1px solid #30363d;border-radius:5px;padding:4px 6px;font-size:11px;min-width:60px}
+.box .l{color:#8b949e;font-size:9px;margin-bottom:2px}
+.box .v{color:#f0f6fc;font-size:13px;font-weight:700}
+.log{min-height:20px;font-size:11px;color:#8b949e;text-align:center;margin:4px 0;padding:0 8px}
+.btn-row{display:flex;gap:6px;margin-top:4px}
+button{padding:5px 12px;background:#21262d;border:1px solid #30363d;color:#c9d1d9;border-radius:5px;font-size:11px;cursor:pointer}
+button:active{background:#30363d}
+#menu{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10}
+#menu h1{color:#f0f6fc;font-size:24px;margin-bottom:6px}
+#menu p{color:#8b949e;font-size:12px;margin:4px 0;text-align:center;max-width:280px;line-height:1.6}
+#menu .start{margin-top:14px;padding:10px 32px;background:#da3633;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer}
+#win{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:10}
+#win h1{color:#f0f6fc;font-size:26px;margin-bottom:10px}
+#win p{color:#8b949e;font-size:13px}
+.dpad{position:fixed;bottom:16px;left:16px;display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:2px}
+.db{background:rgba(255,255,255,.12);border:none;border-radius:8px;color:#fff;font-size:18px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center}
+.db:active{background:rgba(255,255,255,.25)}
+.debuff-tag{display:inline-block;padding:1px 5px;background:#da3633;color:#fff;border-radius:3px;font-size:9px;margin-left:4px}
+</style>
+</head>
+<body>
+<h2>🌲 魔塔·暗黑森林</h2>
+<div class="info">
+  <div class="box"><div class="l">楼层</div><div class="v" id="floorNum">第1层</div></div>
+  <div class="box"><div class="l">HP</div><div class="v" id="hpText">1000/1000</div></div>
+  <div class="box"><div class="l">攻击</div><div class="v" id="atkText">10</div></div>
+  <div class="box"><div class="l">防御</div><div class="v" id="defText">5</div></div>
+  <div class="box"><div class="l">金币</div><div class="v" id="goldText">0</div></div>
+  <div class="box"><div class="l">🔑钥匙</div><div class="v" id="keyText">3</div></div>
+</div>
+<canvas id="c" width="480" height="360"></canvas>
+<div class="log" id="log">方向键/WASD移动，碰怪自动战斗</div>
+<div class="btn-row">
+  <button onclick="S.save()">💾 存档</button>
+  <button onclick="S.load()">📂 读档</button>
+  <button onclick="S.reset()">🔄 重置</button>
+</div>
+
+<div id="menu">
+  <h1>🌲 暗黑森林</h1>
+  <p>比黄金大陆更危险的魔塔<br>怪物更强，资源更稀缺<br>小心debuff陷阱！<br>到达第20层即通关</p>
+  <button class="start" onclick="S.start()">进入魔塔</button>
+</div>
+<div id="win">
+  <h1>🏆 通关！</h1>
+  <p>你穿越了暗黑森林，拯救了公主！</p>
+</div>
+
+<div class="dpad">
+  <div></div><button class="db" id="btnUp">▲</div><div></div>
+  <button class="db" id="btnLeft">◀</div><div></div><button class="db" id="btnRight">▶</div>
+  <div></div><button class="db" id="btnDown">▼</div><div></div>
+</div>
+
+<script>
+const T=32,COLS=15,ROWS=11;
+const S={
+  hp:1000,maxHp:1000,atk:10,def:5,gold:0,keys:3,floor:1,
+  x:1,y:1,map:[],monsters:[],items:[],
+  debuffs:{poison:0,freeze:0},
+  init(){
+    this.hp=1000;this.maxHp=1000;this.atk=10;this.def=5;
+    this.gold=0;this.keys=3;this.floor=1;
+    this.debuffs={poison:0,freeze:0};
+  },
+  genMap(){
+    const m=[];
+    for(let y=0;y<ROWS;y++){const r=[];for(let x=0;x<COLS;x++){r.push(y===0||y===ROWS-1||x===0||x===COLS-1?1:0);}m.push(r);}
+    // Random walls
+    for(let i=0;i<12;i++){const wx=1+Math.floor(Math.random()*(COLS-2));const wy=1+Math.floor(Math.random()*(ROWS-2));if(wx!==this.x||wy!==this.y)m[wy][wx]=1;}
+    // Keys
+    for(let i=0;i<2+Math.floor(this.floor/3);i++){
+      const kx=1+Math.floor(Math.random()*(COLS-2));const ky=1+Math.floor(Math.random()*(ROWS-2));
+      if(!m[ky][kx]&&!(kx===this.x&&ky===this.y)){m[ky][kx]=3;}
+    }
+    // Locked doors
+    for(let i=0;i<2;i++){
+      const dx=1+Math.floor(Math.random()*(COLS-2));const dy=1+Math.floor(Math.random()*(ROWS-2));
+      if(!m[dy][dx]&&!(dx===this.x&&dy===this.y))m[dy][dx]=5;
+    }
+    // Exit
+    m[ROWS-2][COLS-2]=2;
+    this.map=m;
+  },
+  spawnEnemies(){
+    const count=2+Math.floor(this.floor*0.5);
+    const enemies=[];
+    const templates=[
+      {emoji:'🕷️',name:'暗黑蜘蛛',hp:80+this.floor*15,atk:8+this.floor*2,def:2},
+      {emoji:'🦇',name:'洞穴蝙蝠',hp:50+this.floor*10,atk:12+this.floor*2,def:0},
+      {emoji:'💀',name:'骷髅战士',hp:100+this.floor*20,atk:15+this.floor*3,def:5}
+    ];
+    for(let i=0;i<count;i++){
+      let ex,ey;
+      do{ex=1+Math.floor(Math.random()*(COLS-2));ey=1+Math.floor(Math.random()*(ROWS-2));
+      }while((ex===this.x&&ey===this.y)||(ex===COLS-2&&ey===ROWS-2)||this.map[ey][ex]!==0);
+      const t=templates[Math.floor(Math.random()*templates.length)];
+      const hasDebuff=Math.random()<0.3;
+      enemies.push({...t,maxHp:t.hp,debuff:hasDebuff?'poison':null,x:ex,y:ey});
+    }
+    this.monsters=enemies;
+  },
+  draw(){
+    const c=document.getElementById('c');const ctx=c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height);
+    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+      const t=this.map[y][x];
+      const colors={0:'#1c2128',1:'#0d1117',2:'#d29922',3:'#58a6ff',4:'#f85149',5:'#bc8cff'};
+      ctx.fillStyle=colors[t]||'#1c2128';ctx.fillRect(x*T,y*T,T,T);
+      if(t===3)ctx.fillText('🔑',x*T+10,y*T+22);
+      if(t===5)ctx.fillText('🔐',x*T+8,y*T+22);
+      ctx.strokeStyle='#30363d';ctx.strokeRect(x*T,y*T,T,T);
+    }
+    this.monsters.filter(m=>m.hp>0).forEach(m=>{
+      ctx.font='20px serif';ctx.textAlign='center';
+      ctx.fillText(m.emoji,(m.x+.5)*T,(m.y+.7)*T);
+      const ratio=m.hp/m.maxHp;
+      ctx.fillStyle='#333';ctx.fillRect(m.x*T+2,m.y*T+2,T-4,3);
+      ctx.fillStyle='#f85149';ctx.fillRect(m.x*T+2,m.y*T+2,(T-4)*ratio,3);
+      if(m.debuff)ctx.fillText('☠️',(m.x+.5)*T+8,(m.y+.2)*T);
+    });
+    ctx.font='22px serif';ctx.textAlign='center';
+    ctx.fillText('🧙',(this.x+.5)*T,(this.y+.7)*T);
+    // Debuff indicators
+    const dbs=[];
+    if(this.debuffs.poison>0)dbs.push('☠️中毒'+this.debuffs.poison);
+    if(this.debuffs.freeze>0)dbs.push('❄️冰冻'+this.debuffs.freeze);
+    if(dbs.length)document.getElementById('log').innerHTML=dbs.join(' ');
+  },
+  move(dx,dy){
+    if(this.debuffs.freeze>0){this.log('❄️被冰冻了，本回合无法行动！');this.debuffs.freeze--;this.endTurn();return;}
+    const nx=this.x+dx,ny=this.y+dy;
+    if(nx<0||nx>=COLS||ny<0||ny>=ROWS)return;
+    if(this.map[ny][nx]===1)return;
+    // Key door
+    if(this.map[ny][nx]===5){if(this.keys>0){this.keys--;this.map[ny][nx]=0;this.log('🔓用钥匙开门');}else{this.log('🔐需要钥匙！');return;}}
+    // Monster
+    const m=this.monsters.find(m=>m.hp>0&&m.x===nx&&m.y===ny);
+    if(m){this.fight(m);return;}
+    // Item pickup
+    if(this.map[ny][nx]===3){this.map[ny][nx]=0;const r=Math.random();if(r<.4)this.keys++;else if(r<.7)this.gold+=20;else{const hp=Math.min(this.maxHp,this.hp+200);this.hp=hp;this.log('❤️+200HP');}}
+    this.x=nx;this.y=ny;
+    if(this.map[ny][nx]===2)this.nextFloor();else this.endTurn();
+    this.draw();this.ui();
+  },
+  fight(m){
+    const dmg=Math.max(1,this.atk-m.def);
+    m.hp-=dmg;this.log('⚔️攻击'+m.name+'，伤害'+dmg);
+    if(m.hp<=0){this.gold+=10+this.floor*2;this.log('💰击败'+m.name+'！金币+'+m.gold);
+      if(m.debuff==='poison'){this.debuffs.poison=3;this.log('☠️中了蜘蛛之毒！');}
+    }else{const md=Math.max(1,m.atk-this.def);this.hp-=md;this.log('💥被反击，伤害'+md);}
+    if(this.hp<=0)this.gameOver();else{this.endTurn();this.draw();this.ui();}
+  },
+  endTurn(){
+    // Apply poison
+    if(this.debuffs.poison>0){this.hp-=30;this.debuffs.poison--;this.log('☠️中毒伤害30');}
+    if(this.hp<=0)this.gameOver();
+    // Monster moves
+    this.monsters.filter(m=>m.hp>0).forEach(m=>{
+      const dx=m.x<this.x?1:m.x>this.x?-1:0;
+      const dy=m.y<this.y?1:m.y>this.y?-1:0;
+      const mx=m.x+dx,my=m.y+dy;
+      if(!(mx===this.x&&my===this.y)&&this.map[my][mx]===0){
+        if(!(this.monsters.some(m2=>m2.hp>0&&m2.x===mx&&m2.y===my)))m.x=mx,m.y=my;
+      }
+    });
+    this.draw();
+  },
+  nextFloor(){
+    this.floor++;
+    if(this.floor>20){this.win();return;}
+    this.log('⬆️进入第'+this.floor+'层...');
+    this.x=1;this.y=1;
+    this.genMap();this.spawnEnemies();
+    this.draw();this.ui();
+  },
+  ui(){
+    document.getElementById('floorNum').textContent='第'+this.floor+'层';
+    document.getElementById('hpText').textContent=this.hp+'/'+this.maxHp;
+    document.getElementById('atkText').textContent=this.atk;
+    document.getElementById('defText').textContent=this.def;
+    document.getElementById('goldText').textContent=this.gold;
+    document.getElementById('keyText').textContent=this.keys;
+  },
+  log(t){document.getElementById('log').textContent=t;},
+  save(){localStorage.setItem('darktower',JSON.stringify({hp:this.hp,maxHp:this.maxHp,atk:this.atk,def:this.def,gold:this.gold,keys:this.keys,floor:this.floor,x:this.x,y:this.y,map:this.map,monsters:this.monsters,debuffs:this.debuffs}));this.log('💾存档成功！');},
+  load(){
+    const d=localStorage.getItem('darktower');if(d){const s=JSON.parse(d);Object.assign(this,s);this.draw();this.ui();this.log('📂读档成功！');}else this.log('无存档');
+  },
+  reset(){this.init();this.x=1;this.y=1;this.genMap();this.spawnEnemies();this.draw();this.ui();this.log('已重置');},
+  start(){document.getElementById('menu').style.display='none';this.reset();},
+  gameOver(){this.log('💀你倒在了第'+this.floor+'层');setTimeout(()=>{this.init();this.x=1;this.y=1;this.genMap();this.spawnEnemies();this.draw();this.ui();},2000);},
+  win(){document.getElementById('win').style.display='flex';setTimeout(()=>{document.getElementById('win').style.display='none';this.init();this.x=1;this.y=1;this.genMap();this.spawnEnemies();this.draw();this.ui();},3000);}
+};
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('menu').style.display!=='none')return;
+  const k={w:0,s:0,a:-1,d:1,ArrowUp:0,ArrowDown:0,ArrowLeft:-1,ArrowRight:1};
+  if(k[e.key]!==undefined){const v=Math.abs(k[e.key]);if(v===1)S.move(k[e.key],0);else S.move(0,k[e.key]==0?-1:1);}
+});
+['Up','Down','Left','Right'].forEach(d=>{
+  const b=document.getElementById('btn'+d);
+  if(!b)return;let iv;
+  const dir={Up:[0,-1],Down:[0,1],Left:[-1,0],Right:[1,0]};
+  b.addEventListener('touchstart',e=>{e.preventDefault();iv=setInterval(()=>S.move(...dir[d]),120);});
+  b.addEventListener('touchend',()=>clearInterval(iv));
+  b.addEventListener('mousedown',()=>iv=setInterval(()=>S.move(...dir[d]),120));
+  b.addEventListener('mouseup',()=>clearInterval(iv));
+});
+S.ui();
+</script>
+</body>
+</html>

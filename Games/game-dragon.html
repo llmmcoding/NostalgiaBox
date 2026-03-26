@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🐉 龙之谷 - 时光机</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a15;display:flex;flex-direction:column;align-items:center;min-height:100vh;font-family:-apple-system,sans-serif;color:#fff;overflow:hidden}
+h2{color:#f0f6fc;font-size:13px;margin:6px;letter-spacing:2px;text-align:center}
+#gc{background:#0a0a15;border:1px solid #222;border-radius:6px;image-rendering:pixelated;max-width:100%}
+.hud{display:flex;gap:8px;margin:4px 8px;width:100%;max-width:560px}
+.stat{flex:1;background:#111;border:1px solid #333;border-radius:5px;padding:4px 8px;font-size:11px}
+.stat .l{color:#666;font-size:9px;margin-bottom:2px}
+.stat .v{color:#f0f6fc;font-size:13px;font-weight:700}
+.hp-bar{height:6px;background:#333;border-radius:3px;overflow:hidden;margin-top:2px}
+.hp-fill{height:100%;border-radius:3px;transition:width .2s}
+.msg{font-size:11px;color:#666;text-align:center;margin:3px 0;min-height:16px}
+.controls{display:flex;gap:8px;margin-top:4px}
+button{padding:6px 14px;background:#1a1a2e;border:1px solid #333;color:#fff;border-radius:5px;font-size:11px;cursor:pointer}
+button:active{background:#2a2a4e}
+#menu{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10}
+#menu h1{color:#f0f6fc;font-size:24px;margin-bottom:8px;text-shadow:0 0 20px rgba(255,100,0,.5)}
+#menu p{color:#888;font-size:12px;text-align:center;max-width:260px;line-height:1.7;margin:4px 0}
+.start-btn{margin-top:14px;padding:10px 36px;background:linear-gradient(135deg,#e25822,#ff6b00);border:none;color:#fff;border-radius:8px;font-size:15px;cursor:pointer;box-shadow:0 4px 20px rgba(226,88,34,.4)}
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:12}
+#overlay h1{font-size:26px;margin-bottom:8px}
+#overlay p{color:#888;font-size:13px}
+.ctrl-row{display:flex;gap:6px;margin-top:6px}
+.left-btn,.right-btn{position:fixed;bottom:20px;width:56px;height:56px;background:rgba(255,255,255,.12);border:none;border-radius:50%;color:#fff;font-size:22px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center}
+.left-btn{left:20px}
+.right-btn{right:20px}
+</style>
+</head>
+<body>
+<h2>🐉 龙之谷</h2>
+<div class="hud">
+  <div class="stat"><div class="l">HP</div><div class="hp-bar"><div class="hp-fill" id="hpBar" style="width:100%;background:#e25822"></div></div><div class="v" id="hpText">100/100</div></div>
+  <div class="stat"><div class="l">MP</div><div class="hp-bar"><div class="hp-fill" style="width:100%;background:#5865f2"></div></div><div class="v" id="mpText">100/100</div></div>
+  <div class="stat"><div class="l">关卡</div><div class="v" id="stageText">1-1</div></div>
+  <div class="stat"><div class="l">金币</div><div class="v" id="goldText">💰0</div></div>
+</div>
+<canvas id="gc" width="560" height="280"></canvas>
+<div class="msg" id="msg">→键自动前进，空格跳跃，消灭所有敌人！</div>
+<div class="controls">
+  <button onclick="J.jump()">跳🪂</button>
+  <button onclick="J.fireball()">🔥火球(MP30)</button>
+  <button onclick="J.dragon()">🐉召唤神龙(集齐4碎片)</button>
+</div>
+
+<div id="menu">
+  <h1>🐉 龙之谷</h1>
+  <p>横版过关动作RPG<br>收集🔥❄️⚡🌿四种元素碎片<br>在篝火处融合，召唤神龙助战！</p>
+  <p style="color:#555;margin-top:8px">3个关卡：森林 → 火山 → 龙穴</p>
+  <button class="start-btn" onclick="J.start()">开始冒险</button>
+</div>
+
+<div id="overlay">
+  <h1 id="overlayTitle">🏆</h1>
+  <p id="overlayDesc"></p>
+</div>
+
+<button class="left-btn" id="btnLeft">◀</button>
+<button class="right-btn" id="btnRight">▶</button>
+
+<script>
+const G={hp:100,maxHp:100,mp:100,maxMp:100,gold:0,x:50,y:0,vy:0,onGround:true,stage:1,section:1,
+  enemies:[],platforms:[],fireballs:[],particles:[],
+  elements:{fire:0,ice:0,thunder:0,nature:0},dragonReady:false,dragonActive:false,dragonCd:0,
+  running:false,gameOver:false,stageClear:false};
+
+const STAGES=[
+  {name:'🌲 森林',bg:'#0a2010',enemies:[
+    {emoji:'🐌',hp:30,atk:5,exp:10,gold:5,speed:1},
+    {emoji:'👺',hp:50,atk:8,exp:20,gold:10,speed:1.2}
+  ],boss:{emoji:'🌲',hp:150,atk:15,exp:80,gold:50}},
+  {name:'🌋 火山',bg:'#200a00',enemies:[
+    {emoji:'🔥',hp:60,atk:12,exp:30,gold:20,speed:1.5}
+  ],boss:{emoji:'🐲',hp:300,atk:25,exp:200,gold:100}},
+  {name:'❄️ 冰霜',bg:'#0a1020',enemies:[
+    {emoji:'❄️',hp:100,atk:20,exp:50,gold:30,speed:1.8}
+  ],boss:{emoji:'🧊',hp:500,atk:40,exp:400,gold:200}}
+];
+
+const canvas=document.getElementById('gc');
+const ctx=canvas.getContext('2d');
+
+function draw(){
+  const st=STAGES[G.stage-1];
+  ctx.fillStyle=st.bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+  // Particles
+  G.particles.forEach(p=>{ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,p.s,p.s);});
+  // Platforms
+  G.platforms.forEach(p=>{ctx.fillStyle='#222';ctx.fillRect(p.x,p.y,p.w,p.h);ctx.strokeStyle='#333';ctx.strokeRect(p.x,p.y,p.w,p.h);});
+  // Elements
+  G.elements&&[G.elements.fire&&'🔥':null,G.elements.ice&&'❄️':null].filter(Boolean).forEach((e,i)=>{
+    ctx.font='14px serif';ctx.fillText(e,10+i*20,30);
+  });
+  // Enemies
+  G.enemies.forEach(e=>{
+    if(e.hp<=0)return;
+    ctx.font=e.isBoss?'36px':'24px';ctx.textAlign='center';
+    ctx.fillText(e.emoji,(e.x+e.w/2),(e.y+e.h/2+8));
+    // HP bar
+    const ratio=e.hp/e.maxHp;
+    ctx.fillStyle='#333';ctx.fillRect(e.x,e.y-6,e.w,4);
+    ctx.fillStyle='#e25822';ctx.fillRect(e.x,e.y-6,e.w*ratio,4);
+  });
+  // Fireballs
+  G.fireballs.forEach(f=>{
+    ctx.font='16px serif';ctx.fillText('🔥',f.x,f.y);
+  });
+  // Dragon
+  if(G.dragonActive){
+    ctx.font='48px serif';ctx.textAlign='right';
+    ctx.fillText('🐉',canvas.width-20,100);
+  }
+  // Player
+  ctx.font='28px serif';ctx.textAlign='center';
+  ctx.fillText('🧙',G.x,G.y+20);
+  // HP/MP bars
+  ctx.fillStyle='#333';ctx.fillRect(10,canvas.height-20,100,8);
+  ctx.fillStyle='#e25822';ctx.fillRect(10,canvas.height-20,100*(G.hp/G.maxHp),8);
+  ctx.fillStyle='#333';ctx.fillRect(10,canvas.height-10,80,6);
+  ctx.fillStyle='#5865f2';ctx.fillRect(10,canvas.height-10,80*(G.mp/G.maxMp),6);
+  // Element collection
+  const els=['fire','ice','thunder','nature'];
+  const emjs=['🔥','❄️','⚡','🌿'];
+  ctx.font='12px sans-serif';
+  els.forEach((el,i)=>{
+    ctx.fillStyle=G.elements[el]>0?'#fff':'#444';
+    ctx.fillText(`${emjs[i]} ${G.elements[el]}`,canvas.width-80+i*50,20);
+  });
+  if(G.dragonReady) ctx.fillStyle='#ff6b00',ctx.fillText('🐉就绪!',canvas.width-200,20);
+}
+
+function update(){
+  if(G.gameOver||G.stageClear)return;
+  // Auto scroll right
+  G.x+=1.5;
+  if(G.x>canvas.width-80)G.x=canvas.width-80;
+  // Gravity
+  if(!G.onGround){G.vy+=0.8;G.y+=G.vy;if(G.y>=groundY())G.y=groundY(),G.vy=0,G.onGround=true;}
+  // Collision
+  G.enemies.forEach(e=>{
+    if(e.hp<=0)return;
+    e.x-=e.speed;
+    if(e.x<-60)e.x=canvas.width+60;
+    // Hit player
+    if(Math.abs(G.x-e.x)<30&&Math.abs(G.y-e.h)<40){
+      G.hp-=e.atk;
+      G.vy=-5;G.onGround=false;
+      showMsg(`💥被${e.emoji}攻击！-${e.atk}HP`);
+      if(G.hp<=0){G.hp=0;gameOver();}
+    }
+    // Fireball hit
+    G.fireballs.forEach((f,fi)=>{
+      if(Math.abs(f.x-e.x)<30&&Math.abs(f.y-e.y)<30){
+        e.hp-=50;G.fireballs.splice(fi,1);
+        spawnParticles(e.x,e.y,'#ff6b00');
+        if(e.hp<=0){
+          const exp=e.exp||50,G.gold=e.gold||0+(e.gold||10);
+          G.gold+=(e.gold||10);G.exp+=exp;
+          // Element drop
+          const r=Math.random();
+          if(r<.25)G.elements.fire++;
+          else if(r<.5)G.elements.ice++;
+          else if(r<.75)G.elements.thunder++;
+          else G.elements.nature++;
+          if(G.elements.fire&&G.elements.ice&&G.elements.thunder&&G.elements.nature)G.dragonReady=true;
+          showMsg(`🎉击败${e.emoji}！经验+${exp} 金币+${e.gold||10}`);
+        }
+      }
+    });
+  });
+  G.fireballs=G.fireballs.filter(f=>{f.x+=8;return f.x<canvas.width+20;});
+  G.particles=G.particles.filter(p=>{p.x+=p.dx;p.y+=p.dy;p.life--;return p.life>0;});
+  if(G.dragonCd>0)G.dragonCd--;
+  // Dragon attack
+  if(G.dragonActive){
+    G.enemies.forEach(e=>{if(e.hp>0)e.hp-=3;});
+    G.dragonCd=120;G.dragonActive=false;
+  }
+  // Check stage clear
+  if(G.enemies.every(e=>e.hp<=0)){G.stageClear=true;showMsg('🏆本节完成！');setTimeout(nextSection,2000);}
+  draw();updateUI();
+}
+
+function groundY(){return canvas.height-60;}
+function platformY(px){return canvas.height-60-(px||0);}
+
+function spawnStage(){
+  const st=STAGES[G.stage-1];
+  G.enemies=[];G.fireballs=[];G.platforms=[];
+  G.x=50;G.y=groundY();G.vy=0;G.onGround=true;
+  // Spawn enemies based on section
+  const count=2+G.section*2;
+  for(let i=0;i<count;i++){
+    const t=st.enemies[Math.floor(Math.random()*st.enemies.length)];
+    G.enemies.push({...t,x:canvas.width+50+i*100,maxHp:t.hp,isBoss:false,w:30,h:30});
+  }
+  // Boss in section 3
+  if(G.section===3){
+    const b={...st.boss,x:canvas.width+60,maxHp:st.boss.hp,isBoss:true,w:50,h:50};
+    G.enemies.push(b);
+  }
+  // Random platforms
+  for(let i=0;i<3;i++){
+    G.platforms.push({x:100+i*180,y:groundY()-80-Math.random()*60,w:80,h:12});
+  }
+}
+
+function nextSection(){
+  G.section++;if(G.section>3){G.stage++;G.section=1;}
+  if(G.stage>3){winGame();return;}
+  G.stageClear=false;
+  spawnStage();
+  showMsg(`🚪进入${STAGES[G.stage-1].name} 第${G.section}节`);
+  updateUI();
+}
+
+function gameOver(){
+  G.gameOver=true;
+  document.getElementById('overlayTitle').textContent='💀 失败';
+  document.getElementById('overlayDesc').textContent=`你在第${G.stage}章倒下了`;
+  document.getElementById('overlay').style.display='flex';
+}
+function winGame(){
+  document.getElementById('overlayTitle').textContent='🏆 通关！';
+  document.getElementById('overlayDesc').textContent='你击败了所有BOSS，拯救了龙之谷！';
+  document.getElementById('overlay').style.display='flex';
+}
+
+function spawnParticles(x,y,color){
+  for(let i=0;i<5;i++)G.particles.push({x,y,dx:(Math.random()-.5)*6,dy:(Math.random()-.5)*6,s:4+Math.random()*4,c:color,life:20});
+}
+
+J={
+  jump(){if(G.onGround){G.vy=-12;G.onGround=false;}},
+  fireball(){if(G.mp>=30){G.mp-=30;G.fireballs.push({x:G.x+20,y:G.y});showMsg('🔥火球术！');}},
+  dragon(){if(G.dragonReady){G.dragonReady=false;G.dragonActive=true;G.elements={fire:0,ice:0,thunder:0,nature:0};showMsg('🐉神龙降临！');}},
+  start(){G.hp=100;G.maxHp=100;G.mp=100;G.maxMp=100;G.gold=0;G.stage=1;G.section=1;G.elements={fire:0,ice:0,thunder:0,nature:0};G.dragonReady=false;G.dragonActive=false;G.dragonCd=0;G.gameOver=false;G.stageClear=false;spawnStage();document.getElementById('menu').style.display='none';},
+  reset(){G.gameOver=false;G.stageClear=false;document.getElementById('overlay').style.display='none';this.start();}
+};
+
+function updateUI(){
+  document.getElementById('hpText').textContent=Math.max(0,G.hp)+'/'+G.maxHp;
+  document.getElementById('mpText').textContent=G.mp+'/'+G.maxMp;
+  document.getElementById('stageText').textContent=G.stage+'-'+G.section;
+  document.getElementById('goldText').textContent='💰'+G.gold;
+  document.getElementById('hpBar').style.width=(G.hp/G.maxHp*100)+'%';
+}
+function showMsg(t){document.getElementById('msg').textContent=t;}
+
+// MP regen
+setInterval(()=>{if(G.mp<G.maxMp)G.mp=Math.min(G.maxMp,G.mp+2);updateUI();},1000);
+
+let gameLoop;
+function startLoop(){clearInterval(gameLoop);gameLoop=setInterval(update,1000/30);}
+document.getElementById('btnRight').addEventListener('touchstart',e=>{e.preventDefault();J.jump();});
+document.getElementById('btnRight').addEventListener('click',()=>J.jump());
+document.addEventListener('keydown',e=>{
+  if(e.key===' '){e.preventDefault();J.jump();}
+  if(e.key==='f'||e.key==='F')J.fireball();
+  if(e.key==='d'||e.key==='D')J.dragon();
+});
+draw();startLoop();
+</script>
+</body>
+</html>

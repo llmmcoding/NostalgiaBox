@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>方块跑酷 - 时光机</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;font-family:'Courier New',monospace;user-select:none}
+#wrap{position:relative}
+canvas{display:block;image-rendering:pixelated}
+#ui{position:absolute;top:10px;left:10px;color:#fff;font-size:14px;text-shadow:1px 1px 2px #000;pointer-events:none}
+#ui div{margin:3px 0}
+#shop{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:10}
+#shop h2{font-size:22px;margin-bottom:15px;color:#f1c40f}
+.skindesc{font-size:12px;color:#aaa;margin:2px 0}
+.skinbtn{background:#333;border:2px solid #555;color:#fff;padding:6px 14px;margin:4px;cursor:pointer;font-size:13px;font-family:inherit;border-radius:4px}
+.skinbtn:hover{border-color:#f1c40f}
+.skinbtn.active{border-color:#2ecc71;background:#1a4a1a}
+#closeshop{background:#c0392b;border-color:#c0392b;margin-top:15px}
+#startscreen{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:20}
+#startscreen h1{font-size:28px;margin-bottom:8px;color:#e74c3c}
+#startscreen p{font-size:13px;color:#aaa;margin:4px 0}
+#startbtn{background:#e74c3c;border:none;color:#fff;padding:12px 36px;font-size:18px;cursor:pointer;margin-top:20px;font-family:inherit;border-radius:6px}
+#startbtn:hover{background:#c0392b}
+#gameover{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:15}
+#gameover h2{font-size:24px;color:#e74c3c;margin-bottom:10px}
+#gameover p{font-size:14px;margin:5px 0}
+#restartbtn{background:#27ae60;border:none;color:#fff;padding:10px 30px;font-size:16px;cursor:pointer;margin-top:15px;font-family:inherit;border-radius:6px}
+#dpad{position:absolute;bottom:15px;left:0;width:100%;display:flex;justify-content:space-between;padding:0 20px;pointer-events:none}
+.dpad-btn{width:60px;height:60px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:rgba(255,255,255,0.7);pointer-events:all;cursor:pointer;touch-action:none}
+.dpad-btn:active{background:rgba(255,255,255,0.3)}
+#leftgroup{display:flex;gap:10px}
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="c"></canvas>
+<div id="ui">
+ <div>🏆 最高分: <span id="hi">0</span></div>
+ <div>💰 金币: <span id="coin">0</span></div>
+ <div>🎮 <span id="score">0</span>m</div>
+</div>
+<div id="startscreen">
+ <h1>🧱 方块跑酷</h1>
+ <p>← → 移动 | 空格 跳跃</p>
+ <p>躲避障碍物，收集金币！</p>
+ <button id="startbtn">开始游戏</button>
+</div>
+<div id="gameover">
+ <h2>游戏结束</h2>
+ <p>距离: <span id="fscore">0</span>m</p>
+ <p>金币: +<span id="fcoin">0</span></p>
+ <button id="restartbtn">再来一局</button>
+</div>
+<div id="shop">
+ <h2>🎨 皮肤商店</h2>
+ <div id="skinlist"></div>
+ <button id="closeshop" class="skinbtn">关闭</button>
+</div>
+<div id="dpad">
+ <div id="leftgroup">
+  <div class="dpad-btn" id="dleft">◀</div>
+  <div class="dpad-btn" id="dright">▶</div>
+ </div>
+ <div class="dpad-btn" id="djump">▲</div>
+</div>
+</div>
+<script>
+const C=document.getElementById('c'),X=C.getContext('2d');
+let W,H,gameState='menu',score=0,coins=0,frame=0,speed=4;
+const GRAV=0.8,JUMP=-14,LANE_W=60;
+let player,lanes=[],obstacles=[],items=[],laneCount=3;
+let highScore=parseInt(localStorage.getItem('blk_hi')||'0');
+let totalCoins=parseInt(localStorage.getItem('blk_coins')||'0');
+let skinIdx=0;
+const SKINS=[
+ {name:'默认',color:'#3498db'},
+ {name:'火焰',color:'#e74c3c'},
+ {name:'森林',color:'#27ae60'},
+ {name:'黄金',color:'#f1c40f'},
+ {name:'紫晶',color:'#9b59b6'},
+];
+function skinPrice(i){return i===0?0:i<3?200:500}
+function init(){
+ W=C.width=360;H=C.height=560;
+ laneCount=3;
+ player={x:W/2,y:H-120,vy:0,w:40,h:40,onGround:true,lane:1,tx:W/2,ty:H-120};
+ lanes=[];
+ obstacles=[];
+ items=[];
+ score=0;coins=0;frame=0;speed=4;
+ for(let i=0;i<laneCount;i++) lanes.push({x:W/2+(i-1)*LANE_W,y:0,w:LANE_W,h:H});
+}
+function resize(){
+ const s=Math.min(window.innerWidth/360,window.innerHeight/620);
+ C.style.width=360*s+'px';C.style.height=560*s+'px';
+}
+window.addEventListener('resize',resize);resize();
+function isoX(rx,ry){return rx-ry}
+function isoY(rx,ry){return (rx+ry)*0.5}
+function drawIso(){
+ X.fillStyle='#16213e';
+ for(let r=0;r<20;r++){
+  for(let c=0;c<3;c++){
+   let rx=c*LANE_W,ry=r*28;
+   let ix=isoX(rx,ry)+W/2;
+   let iy=isoY(rx,ry)+60;
+   X.fillStyle=(r+c)%2===0?'#1a1a3e':'#16213e';
+   X.fillRect(ix-25,iy-10,50,20);
+  }
+ }
+}
+function drawPlayer(){
+ const px=player.x,py=player.y;
+ const bob=Math.sin(frame*0.15)*2;
+ const c=SKINS[skinIdx].color;
+ X.fillStyle=c;
+ X.fillRect(px-18,py-38+bob,36,36);
+ X.fillStyle='rgba(255,255,255,0.3)';
+ X.fillRect(px-14,py-34+bob,28,8);
+ X.fillStyle='#fff';
+ X.fillRect(px-12,py-30+bob,6,6);
+ X.fillRect(px+6,py-30+bob,6,6);
+ X.fillStyle='#000';
+ X.fillRect(px-10,py-28+bob,3,3);
+ X.fillRect(px+8,py-28+bob,3,3);
+}
+function drawObs(o){
+ const px=o.x,py=o.y;
+ if(o.type==='blade'){
+  X.save();X.translate(px,py-20);
+  X.rotate(frame*0.2);
+  X.fillStyle='#bdc3c7';
+  for(let i=0;i<4;i++){
+   X.rotate(Math.PI/2);
+   X.fillRect(-4,-18,8,18);
+  }
+  X.fillStyle='#7f8c8d';
+  X.beginPath();X.arc(0,0,6,0,Math.PI*2);X.fill();
+  X.restore();
+ } else if(o.type==='rock'){
+  X.fillStyle='#7f8c8d';
+  X.fillRect(px-20,py-30,40,30);
+  X.fillStyle='#95a5a6';
+  X.fillRect(px-16,py-26,12,10);
+  X.fillStyle='#e74c3c';
+  X.fillRect(px-4,py-24,8,8);
+ } else if(o.type==='gap'){
+  X.fillStyle='#000';
+  X.fillRect(px-22,py-4,44,8);
+ }
+}
+function drawItem(it){
+ const px=it.x,py=it.y;
+ const bob=Math.sin(frame*0.1+it.x)*3;
+ X.fillStyle='#f1c40f';
+ X.beginPath();
+ X.moveTo(px,py-10+bob);
+ for(let i=0;i<5;i++){
+  let a=i*Math.PI*2/5-Math.PI/2;
+  let r=i%2===0?10:5;
+  X.lineTo(px+Math.cos(a)*r,py+Math.sin(a)*r+bob);
+ }
+ X.closePath();X.fill();
+ X.fillStyle='#f39c12';
+ X.beginPath();X.arc(px,py+bob,5,0,Math.PI*2);X.fill();
+}
+function spawnObs(){
+ if(Math.random()<0.025){
+  let lane=Math.floor(Math.random()*laneCount);
+  let types=['blade','rock','gap'];
+  let type=types[Math.floor(Math.random()*types.length)];
+  obstacles.push({x:W/2+(lane-1)*LANE_W,y:-40,type,vy:type==='rock'?3:0,w:40,h:40,passed:false});
+ }
+ if(Math.random()<0.02){
+  let lane=Math.floor(Math.random()*laneCount);
+  let usedLanes=obstacles.filter(o=>Math.abs(o.y)<80).map(o=>o.x);
+  let x=W/2+(lane-1)*LANE_W;
+  if(!usedLanes.some(ux=>Math.abs(ux-x)<LANE_W)){
+   items.push({x,y:-30,type:'coin',w:20,h:20,collected:false});
+  }
+ }
+}
+function update(){
+ frame++;
+ speed=4+Math.floor(score/100)*0.3;
+ if(speed>12)speed=12;
+ player.vy+=GRAV;
+ player.y+=player.vy;
+ const ground=H-100;
+ if(player.y>=ground){player.y=ground;player.vy=0;player.onGround=true;}
+ // clamp to lane
+ let tlx=W/2+(player.lane-1)*LANE_W;
+ player.x+=(tlx-player.x)*0.15;
+ // obstacles
+ for(let o of obstacles){
+  o.y+=speed;
+  if(!o.passed && o.y>player.y+40){
+   let hit=false;
+   if(o.type==='gap'){
+    hit=Math.abs(o.x-player.x)<22;
+   } else {
+    hit=Math.abs(o.x-player.x)<30&&o.y>player.y-40&&o.y<player.y+20;
+   }
+   if(hit){gameState='over';saveScore();return;}
+   o.passed=true;
+  }
+  if(o.type==='rock')o.y+=o.vy;
+ }
+ obstacles=obstacles.filter(o=>o.y<H+60);
+ // items
+ for(let it of items){
+  it.y+=speed;
+  if(!it.collected&&Math.abs(it.x-player.x)<25&&Math.abs(it.y-player.y)<35){
+   it.collected=true;coins++;
+  }
+ }
+ items=items.filter(it=>!it.collected&&it.y<H+40);
+ spawnObs();
+ score=Math.floor(frame/6);
+}
+function draw(){
+ X.fillStyle='#0a0a1a';X.fillRect(0,0,W,H);
+ drawIso();
+ // ground line
+ X.fillStyle='#2c3e50';
+ X.fillRect(0,H-100,W,100);
+ X.fillStyle='#1a1a2e';
+ X.fillRect(0,H-50,W,50);
+ for(let o of obstacles) drawObs(o);
+ for(let it of items) drawItem(it);
+ drawPlayer();
+ // speed lines
+ X.strokeStyle='rgba(255,255,255,0.05)';
+ for(let i=0;i<5;i++){
+  let ly=(frame*3+i*120)%H;
+  X.beginPath();X.moveTo(0,ly);X.lineTo(W,ly+20);X.stroke();
+ }
+}
+function loop(){
+ if(gameState==='play'){update();draw();}
+ document.getElementById('score').textContent=score;
+ document.getElementById('hi').textContent=highScore;
+ document.getElementById('coin').textContent=totalCoins;
+ requestAnimationFrame(loop);
+}
+function saveScore(){
+ if(score>highScore)highScore=score;
+ totalCoins+=coins;
+ localStorage.setItem('blk_hi',highScore);
+ localStorage.setItem('blk_coins',totalCoins);
+ document.getElementById('fscore').textContent=score;
+ document.getElementById('fcoin').textContent=coins;
+ document.getElementById('gameover').style.display='flex';
+}
+function startGame(){
+ init();gameState='play';
+ document.getElementById('startscreen').style.display='none';
+ document.getElementById('gameover').style.display='none';
+ document.getElementById('shop').style.display='none';
+}
+function showShop(){
+ gameState='menu';
+ document.getElementById('shop').style.display='flex';
+ renderSkins();
+}
+function renderSkins(){
+ let html='';
+ SKINS.forEach((s,i)=>{
+  let price=skinPrice(i);
+  let owned=totalCoins>=price||i===0||localStorage.getItem('blk_skin_'+i)==='1';
+  let active=skinIdx===i?'active':'';
+  let btnText=owned?'使用'+(i===0?' ✓':''):'💰 '+price;
+  if(!owned&&i!==0&&localStorage.getItem('blk_skin_'+i)==='1')owned=true;
+  html+=`<div style='margin:8px 0;text-align:center'>
+   <div style="color:${s.color};font-size:18px">███</div>
+   <div class="skindesc">${s.name}</div>
+   <button class="skinbtn ${active}" onclick="buySkin(${i})" ${!owned&&skinIdx!==i?'disabled style="opacity:0.5"':''}>${btnText}</button>
+  </div>`;
+ });
+ document.getElementById('skinlist').innerHTML=html;
+}
+function buySkin(i){
+ let price=skinPrice(i);
+ let owned=localStorage.getItem('blk_skin_'+i)==='1'||i===0;
+ if(!owned){
+  if(totalCoins>=price){
+   totalCoins-=price;
+   localStorage.setItem('blk_coins',totalCoins);
+   localStorage.setItem('blk_skin_'+i,'1');
+  } else return;
+ }
+ skinIdx=i;
+ localStorage.setItem('blk_skin',i);
+ renderSkins();
+}
+skinIdx=parseInt(localStorage.getItem('blk_skin')||'0');
+document.getElementById('startbtn').onclick=startGame;
+document.getElementById('restartbtn').onclick=startGame;
+document.getElementById('closeshop').onclick=()=>{document.getElementById('shop').style.display='none';gameState='play';};
+// keyboard
+const keys={};
+document.addEventListener('keydown',e=>{
+ keys[e.code]=true;
+ if(e.code==='Space'&&gameState==='play'&&player.onGround){player.vy=JUMP;player.onGround=false;e.preventDefault();}
+ if(e.code==='ArrowLeft'&&gameState==='play')player.lane=Math.max(0,player.lane-1);
+ if(e.code==='ArrowRight'&&gameState==='play')player.lane=Math.min(laneCount-1,player.lane+1);
+ if(e.code==='KeyS'&&gameState==='menu')showShop();
+});
+document.addEventListener('keyup',e=>keys[e.code]=false);
+// touch dpad
+let touchLane=1;
+function handleDPad(){
+ if(gameState!=='play')return;
+ if(document.getElementById('dleft').pressed)player.lane=Math.max(0,player.lane-1);
+ if(document.getElementById('dright').pressed)player.lane=Math.min(laneCount-1,player.lane+1);
+ if(document.getElementById('djump').pressed&&player.onGround){player.vy=JUMP;player.onGround=false;}
+}
+['dleft','dright','djump'].forEach(id=>{
+ let el=document.getElementById(id);
+ let set=false;
+ el.addEventListener('touchstart',e=>{e.preventDefault();el.pressed=true;set=true;},{passive:false});
+ el.addEventListener('touchend',e=>{e.preventDefault();el.pressed=false;},{passive:false});
+ el.addEventListener('mousedown',e=>{el.pressed=true;set=true;});
+ el.addEventListener('mouseup',e=>{el.pressed=false;});
+});
+setInterval(handleDPad,16);
+init();loop();
+</script>
+</body>
+</html>

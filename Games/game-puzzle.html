@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>宠物小精灵三消 - 时光机</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;font-family:'Courier New',monospace;user-select:none}
+#wrap{position:relative}
+canvas{display:block;image-rendering:pixelated}
+#ui{position:absolute;top:8px;left:10px;color:#fff;font-size:13px;text-shadow:1px 1px 2px #000;pointer-events:none}
+#ui div{margin:2px 0}
+#infopanel{position:absolute;top:8px;right:10px;color:#fff;font-size:12px;text-align:right;text-shadow:1px 1px 2px #000}
+#catchmodal{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:30;color:#fff}
+#catchmodal h2{font-size:20px;margin-bottom:15px;color:#f1c40f}
+.pkmoption{background:#2c3e50;border:2px solid #555;padding:12px 24px;margin:8px;cursor:pointer;font-size:15px;color:#fff;width:200px;text-align:center;border-radius:6px;font-family:inherit}
+.pkmoption:hover{border-color:#f1c40f;background:#34495e}
+.pokedexbtn{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:#c0392b;border:none;color:#fff;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;border-radius:4px}
+#dexmodal{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:35;color:#fff;overflow-y:auto}
+#dexmodal h2{font-size:20px;margin:15px 0 10px;color:#f1c40f}
+.dexgrid{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:10px;max-height:60vh;overflow-y:auto}
+.dexentry{background:#2c3e50;border:2px solid #555;padding:10px;width:80px;text-align:center;border-radius:6px;font-size:12px}
+.dexentry.caught{border-color:#2ecc71;background:#1a3a2a}
+.dexentry .emoji{font-size:28px}
+#closedex{background:#7f8c8d;border:none;color:#fff;padding:8px 20px;font-size:14px;cursor:pointer;margin:10px;font-family:inherit;border-radius:4px}
+#startscreen{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:40}
+#startscreen h1{font-size:24px;margin-bottom:8px;color:#e74c3c}
+#startscreen p{font-size:13px;color:#aaa;margin:3px 0}
+#startbtn{background:#e74c3c;border:none;color:#fff;padding:10px 30px;font-size:16px;cursor:pointer;margin-top:15px;font-family:inherit;border-radius:6px}
+#gameover{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:30}
+#gameover h2{font-size:22px;color:#e74c3c}
+#gameover p{font-size:14px;margin:6px 0}
+#restartbtn{background:#27ae60;border:none;color:#fff;padding:10px 30px;font-size:15px;cursor:pointer;margin-top:12px;font-family:inherit;border-radius:6px}
+#combo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32px;color:#f1c40f;text-shadow:2px 2px 4px #000;pointer-events:none;display:none;z-index:25}
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="c"></canvas>
+<div id="ui">
+ <div>得分: <span id="score">0</span></div>
+ <div>🔮 精灵球: <span id="balls">0</span>/10</div>
+</div>
+<div id="infopanel">
+ <div>💡 消除3个以上</div>
+ <div>集满精灵球捉精灵!</div>
+</div>
+<button class="pokedexbtn" id="opendex">📖 图鉴</button>
+<div id="combo"></div>
+<div id="startscreen">
+ <h1>🔮 宠物小精灵三消</h1>
+ <p>点击交换相邻两个元素</p>
+ <p>横/竖消除3个以上</p>
+ <button id="startbtn">开始游戏</button>
+</div>
+<div id="gameover">
+ <h2>游戏结束</h2>
+ <p>得分: <span id="fscore">0</span></p>
+ <button id="restartbtn">再来一局</button>
+</div>
+<div id="catchmodal">
+ <h2>🎉 精灵球满了!</h2>
+ <p style="font-size:13px;color:#aaa;margin-bottom:10px">选择一只精灵尝试捕捉:</p>
+ <div id="catchoptions"></div>
+</div>
+<div id="dexmodal">
+ <h2>📖 皮卡图鉴</h2>
+ <div id="dexgrid" class="dexgrid"></div>
+ <button id="closedex">关闭</button>
+</div>
+</div>
+<script>
+const C=document.getElementById('c'),X=C.getContext('2d');
+let W=360,H=520,ROWS=8,COLS=6,TILE=44;
+const OX=(W-COLS*TILE)/2,OY=80;
+const POKEMON=[
+ {name:'皮卡丘',emoji:'⚡',color:'#f1c40f',bg:'#f39c12'},
+ {name:'小火龙',emoji:'🔥',color:'#e74c3c',bg:'#c0392b'},
+ {name:'杰尼龟',emoji:'🐢',color:'#2ecc71',bg:'#27ae60'},
+ {name:'妙蛙种子',emoji:'🌱',color:'#27ae60',bg:'#1e8449'},
+ {name:'超梦',emoji:'⚡',color:'#9b59b6',bg:'#8e44ad'},
+];
+const EMOJIS=['⚡','🔥','🐢','🌱','⭐','💎'];
+let board=[],score=0,balls=0,combo=0,frame=0,gameState='menu';
+let selected=null,animating=false,gameOver=false;
+let highScore=parseInt(localStorage.getItem('puz_hi')||'0');
+let caughtPoke=JSON.parse(localStorage.getItem('puz_caught')||'[]');
+let dexSeen=JSON.parse(localStorage.getItem('puz_seen')||'[]');
+function resize(){
+ const s=Math.min(window.innerWidth/W,window.innerHeight/H);
+ C.style.width=W*s+'px';C.style.height=H*s+'px';
+}
+window.addEventListener('resize',resize);resize();
+function init(){
+ board=[];
+ for(let r=0;r<ROWS;r++){
+  board[r]=[];
+  for(let c=0;c<COLS;c++){
+   let v;
+   do{v=Math.floor(Math.random()*EMOJIS.length);}while(
+    (c>=2&&board[r][c-1]===v&&board[r][c-2]===v)||
+    (r>=2&&board[r-1][c]===v&&board[r-2][c]===v)
+   );
+   board[r][c]=v;
+  }
+ }
+ score=0;balls=0;combo=0;selected=null;animating=false;gameOver=false;
+}
+function getTile(r,c){return {x:OX+c*TILE,y:OY+r*TILE,w:TILE,h:TILE};}
+function drawTile(r,c){
+ let t=getTile(r,c);
+ let v=board[r][c];
+ let e=EMOJIS[v];
+ let bob=Math.sin(frame*0.05+c*0.5+r*0.7)*2;
+ let col=['#3498db','#e74c3c','#2ecc71','#9b59b6','#f1c40f','#1abc9c'][v];
+ let sel=(selected&&selected.r===r&&selected.c===c);
+ X.fillStyle=sel?'rgba(255,255,255,0.3)':'rgba(0,0,0,0.2)';
+ X.fillRect(t.x+1,t.y+1,t.w-2,t.h-2);
+ X.strokeStyle=sel?'#fff':'rgba(255,255,255,0.1)';
+ X.lineWidth=sel?3:1;
+ X.strokeRect(t.x+1,t.y+1,t.w-2,t.h-2);
+ X.font=sel?'bold 22px serif':'20px serif';
+ X.textAlign='center';X.textBaseline='middle';
+ X.fillStyle=col;
+ X.fillText(e,t.x+t.w/2,t.y+t.h/2+bob);
+}
+function draw(){
+ X.fillStyle='#1a1a2e';X.fillRect(0,0,W,H);
+ // header
+ X.fillStyle='rgba(255,255,255,0.05)';
+ X.fillRect(0,0,W,OY);
+ X.fillStyle='#fff';X.font='bold 18px Courier New';X.textAlign='left';X.textBaseline='top';
+ X.fillText('🔮 三消',10,12);
+ X.font='14px Courier New';X.textAlign='right';
+ X.fillStyle='#f1c40f';
+ X.fillText('🏆 '+highScore, W-10,12);
+ X.fillStyle='#aaa';X.font='12px Courier New';
+ X.fillText('得分:'+score+' 球:'+balls, W-10,34);
+ // board bg
+ X.fillStyle='#0d0d1e';
+ X.fillRect(OX-2,OY-2,COLS*TILE+4,ROWS*TILE+4);
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)drawTile(r,c);
+ // ball bar
+ let barW=200,bx=W/2-barW/2,by=H-40;
+ X.fillStyle='#333';X.fillRect(bx,by,barW,14);
+ X.fillStyle='#e74c3c';
+ X.fillRect(bx,by,barW*(balls/10),14);
+ X.strokeStyle='#555';X.lineWidth=2;
+ X.strokeRect(bx,by,barW,14);
+ X.fillStyle='#fff';X.font='11px Courier New';X.textAlign='center';X.textBaseline='bottom';
+ X.fillText('🔮 '.repeat(balls),W/2,by);
+}
+function showCombo(txt){
+ let el=document.getElementById('combo');
+ el.textContent=txt;el.style.display='block';
+ setTimeout(()=>el.style.display='none',800);
+}
+function tryMove(r1,c1,r2,c2){
+ let dr=Math.abs(r1-r2),dc=Math.abs(c1-c2);
+ if(dr+dc!==1)return;
+ let t=board[r1][c1];board[r1][c1]=board[r2][c2];board[r2][c2]=t;
+ let matches=findMatches();
+ if(matches.length===0){
+  board[r2][c2]=board[r1][c1];board[r1][c1]=t;return;
+ }
+ animating=true;
+ selected={r:r2,c:c2};
+ processMatches(matches,()=>{
+  dropTiles(()=>{
+   fillBoard(()=>{animating=false;selected=null;});
+  });
+ });
+}
+function findMatches(){
+ let m=new Set();
+ for(let r=0;r<ROWS;r++){
+  for(let c=0;c<COLS-2;c++){
+   if(board[r][c]===board[r][c+1]&&board[r][c]===board[r][c+2]&&board[r][c]!==-1){
+    m.add(r+','+c);m.add(r+','+(c+1));m.add(r+','+(c+2));
+    let k=c+3;while(k<COLS&&board[r][k]===board[r][c]){m.add(r+','+k);k++;}
+   }
+  }
+ }
+ for(let c=0;c<COLS;c++){
+  for(let r=0;r<ROWS-2;r++){
+   if(board[r][c]===board[r+1][c]&&board[r][c]===board[r+2][c]&&board[r][c]!==-1){
+    m.add(r+','+c);m.add((r+1)+','+c);m.add((r+2)+','+c);
+    let k=r+3;while(k<ROWS&&board[k][c]===board[r][c]){m.add(k+','+c);k++;}
+   }
+  }
+ }
+ return Array.from(m).map(s=>{let [r,c]=s.split(',');return{r:+r,c:+c};});
+}
+function processMatches(matches,cb){
+ if(matches.length===0){cb();return;}
+ animating=true;
+ let pts=matches.length;
+ combo++;
+ let mul=combo>1?combo:1;
+ score+=pts*10*mul;
+ balls=Math.min(10,balls+Math.floor(pts/3));
+ if(combo>1)showCombo(combo+'连消! +'+pts*10*mul);
+ // save seen
+ matches.forEach(m=>{
+  let v=board[m.r][m.c];
+  if(!dexSeen.includes(v)){dexSeen.push(v);localStorage.setItem('puz_seen',JSON.stringify(dexSeen));}
+ });
+ // clear
+ matches.forEach(m=>board[m.r][m.c]=-1);
+ setTimeout(()=>{
+  if(balls>=10&&matches.length>0){showCatchModal(cb);return;}
+  dropTiles(()=>{
+   fillBoard(()=>{
+    let m2=findMatches();
+    if(m2.length>0)processMatches(m2,cb);
+    else{combo=0;cb();}
+   });
+  });
+ },150);
+}
+function dropTiles(cb){
+ let moved=false;
+ for(let c=0;c<COLS;c++){
+  let write=ROWS-1;
+  for(let r=ROWS-1;r>=0;r--){
+   if(board[r][c]!==-1){
+    if(r!==write){board[write][c]=board[r][c];board[r][c]=-1;moved=true;}
+    write--;
+   }
+  }
+ }
+ setTimeout(cb,moved?100:0);
+}
+function fillBoard(cb){
+ let changed=false;
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+  if(board[r][c]===-1){board[r][c]=Math.floor(Math.random()*EMOJIS.length);changed=true;}
+ }
+ if(changed)setTimeout(()=>fillBoard(cb),80);else cb();
+}
+function showCatchModal(cb){
+ gameState='catch';
+ let options=document.getElementById('catchoptions');
+ let choices=[];
+ while(choices.length<3){
+  let p=Math.floor(Math.random()*POKEMON.length);
+  if(!choices.includes(p))choices.push(p);
+ }
+ options.innerHTML='';
+ choices.forEach(pi=>{
+  let p=POKEMON[pi];
+  let btn=document.createElement('button');
+  btn.className='pkmoption';
+  btn.innerHTML=`<div style="font-size:32px">${p.emoji}</div><div>${p.name}</div>`;
+  btn.onclick=()=>{
+   let caught=Math.random()<0.7;
+   if(caught){
+    if(!caughtPoke.includes(pi)){caughtPoke.push(pi);localStorage.setItem('puz_caught',JSON.stringify(caughtPoke));}
+    alert('🎉 捉到了 '+p.name+'!');
+   } else {
+    alert('😢 '+p.name+' 跑掉了...');
+   }
+   balls=0;
+   document.getElementById('catchmodal').style.display='none';
+   gameState='play';
+   combo=0;
+   let m2=findMatches();
+   if(m2.length>0)processMatches(m2,cb);
+   else cb();
+  };
+  options.appendChild(btn);
+ });
+ document.getElementById('catchmodal').style.display='flex';
+}
+function renderDex(){
+ let grid=document.getElementById('dexgrid');
+ grid.innerHTML='';
+ POKEMON.forEach((p,i)=>{
+  let caught=caughtPoke.includes(i);
+  let seen=dexSeen.includes(i)||caught;
+  let div=document.createElement('div');
+  div.className='dexentry'+(caught?' caught':'');
+  div.innerHTML=`<div class="emoji">${seen?p.emoji:'❓'}</div><div style="font-size:10px;color:#aaa">#${String(i+1).padStart(3,'0')}</div><div style="font-size:11px">${seen?p.name:'???'}</div><div style="font-size:10px;color:${caught?'#2ecc71':'#f39c12'}">${caught?'已捕捉':'未捕捉'}</div>`;
+  grid.appendChild(div);
+ });
+}
+function loop(){
+ frame++;
+ if(gameState==='play')draw();
+ document.getElementById('score').textContent=score;
+ document.getElementById('balls').textContent=balls;
+ requestAnimationFrame(loop);
+}
+C.addEventListener('click',e=>{
+ if(gameState!=='play'||animating)return;
+ let rect=C.getBoundingClientRect();
+ let s=W/rect.width;
+ let mx=(e.clientX-rect.left)*s;
+ let my=(e.clientY-rect.top)*s;
+ let c=Math.floor((mx-OX)/TILE),r=Math.floor((my-OY)/TILE);
+ if(r<0||r>=ROWS||c<0||c>=COLS)return;
+ if(!selected){selected={r,c};return;}
+ tryMove(selected.r,selected.c,r,c);
+ selected=null;
+});
+document.getElementById('startbtn').onclick=()=>{init();gameState='play';document.getElementById('startscreen').style.display='none';};
+document.getElementById('restartbtn').onclick=()=>{init();gameState='play';document.getElementById('gameover').style.display='none';};
+document.getElementById('opendex').onclick=()=>{renderDex();document.getElementById('dexmodal').style.display='flex';};
+document.getElementById('closedex').onclick=()=>{document.getElementById('dexmodal').style.display='none';};
+loop();
+</script>
+</body>
+</html>
