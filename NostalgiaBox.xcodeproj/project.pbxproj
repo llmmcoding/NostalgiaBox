@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		094E7FE22F3FF6C87255D773 /* NostalgiaBoxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17805042DC500F52CB05910D /* NostalgiaBoxApp.swift */; };
 		49E37104F09495C86FAEFF3B /* AppIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2E8D72CC0D156D86D9313E /* AppIconView.swift */; };
+		55C857951E9BA7208A5E56DA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 61628DD68CB141094328A0AC /* LaunchScreen.storyboard */; };
 		7D8CFBD35593DE0D4D1805B1 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4884B3E6E16CF9E2AB8EEEEF /* HomeView.swift */; };
 		9E692D1A69CECD9D34BC5546 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D0CCAC561BC5EDAF033EB0D /* Assets.xcassets */; };
 		B6D9B48FBA9FBF0B4F27C075 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3053A5B500C32437308237 /* PlayerView.swift */; };
@@ -23,6 +24,7 @@
 		3D3053A5B500C32437308237 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 		4884B3E6E16CF9E2AB8EEEEF /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		5EB084A30C1356D1217A362A /* NostalgiaBox.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NostalgiaBox.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		61628DD68CB141094328A0AC /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		77A80FEE0E14DD24D37BFB70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		86E02E78564E8CC458C8B80D /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		8D0CCAC561BC5EDAF033EB0D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -86,10 +88,19 @@
 			isa = PBXGroup;
 			children = (
 				252F20EB70E5C29BC072C047 /* App */,
+				993ACA2E4152C8CD3F617869 /* Resources */,
 				BB62A0B8F6745F38F945E4A9 /* Sources */,
 				8D0CCAC561BC5EDAF033EB0D /* Assets.xcassets */,
 				2AB3B110BB869522E2016AFF /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		993ACA2E4152C8CD3F617869 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				61628DD68CB141094328A0AC /* LaunchScreen.storyboard */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		A0A7BCC0282229F53675FA8B /* ViewModels */ = {
@@ -224,6 +235,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9E692D1A69CECD9D34BC5546 /* Assets.xcassets in Resources */,
+				55C857951E9BA7208A5E56DA /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

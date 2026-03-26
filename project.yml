@@ -25,6 +25,7 @@ targets:
       - path: App
       - path: Sources
       - path: Assets.xcassets
+      - path: Resources
     settings:
       base:
         INFOPLIST_FILE: App/Info.plist

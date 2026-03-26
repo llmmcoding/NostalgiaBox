@@ -1,0 +1,30 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup XcodeGen
+        run: |
+          which xcodegen || brew install xcodegen
+
+      - name: Generate Project
+        run: xcodegen generate
+
+      - name: Build
+        run: |
+          xcodebuild -project NostalgiaBox.xcodeproj \
+            -scheme NostalgiaBox \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            build CODE_SIGNING_ALLOWED=NO
