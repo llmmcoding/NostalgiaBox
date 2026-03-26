@@ -634,8 +634,13 @@ function closeDetail() {
 }
 
 function playGame() {
-  // Open the actual game file in a new tab
-  window.open('game-runner.html', '_blank');
+  const file = gameFileMap[currentGameIdx];
+  if(file) {
+    const base = window.location.href.replace(/\/[^/]*$/, '');
+    window.open(base + '/' + file, '_blank');
+  } else {
+    showToast('游戏即将上线');
+  }
 }
 
 // ======== PET ========
