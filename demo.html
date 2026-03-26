@@ -267,6 +267,31 @@ body {
 .pw-restore { text-align: center; font-size: 12px; color: var(--text3); cursor: pointer; }
 .pw-note { text-align: center; font-size: 11px; color: var(--text3); margin-top: 8px; }
 
+/* ====== GAME IFRAME ====== */
+#gameFrame {
+  position: absolute;
+  top: 60px; left: 0; right: 0; bottom: 84px;
+  border: none;
+  background: #000;
+  display: none;
+  z-index: 25;
+}
+#gameFrame.show { display: block; }
+#gameBackBtn {
+  position: absolute;
+  top: 8px; left: 12px;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  border-radius: 50%;
+  width: 36px; height: 36px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 30;
+  display: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+#gameBackBtn.show { display: flex; align-items: center; justify-content: center; }
+
 /* ====== TOAST ====== */
 .toast { position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0,0,0,0.75); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 45; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -480,6 +505,10 @@ body {
     <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
+    <!-- Game Iframe -->
+    <button id="gameBackBtn" onclick="closeGameFrame()">✕</button>
+    <iframe id="gameFrame" allow="autoplay"></iframe>
+
     <!-- Tab Bar -->
     <div class="tab-bar">
       <div class="tab-item active" id="tab0" onclick="switchTab(0)"><div class="icon">🏠</div><div>首页</div></div>
@@ -637,10 +666,27 @@ function playGame() {
   const file = gameFileMap[currentGameIdx];
   if(file) {
     const base = window.location.href.replace(/\/[^/]*$/, '');
-    window.open(base + '/' + file, '_blank');
+    const gameUrl = base + '/' + file;
+    const iframe = document.getElementById('gameFrame');
+    iframe.src = gameUrl;
+    iframe.classList.add('show');
+    document.getElementById('gameBackBtn').classList.add('show');
+    // Hide other overlays
+    document.getElementById('gameDetail').classList.remove('show');
+    document.getElementById('mainScreen').style.display = 'none';
   } else {
     showToast('游戏即将上线');
   }
+}
+
+function closeGameFrame() {
+  const iframe = document.getElementById('gameFrame');
+  iframe.src = '';
+  iframe.classList.remove('show');
+  document.getElementById('gameBackBtn').classList.remove('show');
+  document.getElementById('gameDetail').classList.remove('show');
+  document.getElementById('mainScreen').style.display = 'block';
+  document.getElementById('tabBar').style.display = 'flex';
 }
 
 // ======== PET ========
