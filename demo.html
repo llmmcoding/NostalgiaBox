@@ -533,6 +533,7 @@ setInterval(updateClock,30000);
 
 // Always show mainScreen first, then optionally show onboarding
 document.getElementById('mainScreen').style.display='block';
+document.getElementById('loadingOverlay').style.display='none';
 if(!localStorage.getItem('nb_visited')){
   document.getElementById('onboarding').style.display='flex';
   localStorage.setItem('nb_visited','1');
