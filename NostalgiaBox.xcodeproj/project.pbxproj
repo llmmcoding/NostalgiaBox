@@ -17,6 +17,7 @@
 		67DCFCE695A54C979394F696 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2FBD496413D02011DD189D /* NetworkMonitor.swift */; };
 		7D8CFBD35593DE0D4D1805B1 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4884B3E6E16CF9E2AB8EEEEF /* HomeView.swift */; };
 		90B95ADF3CC9DA77944399B9 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDF4CA74AB8DE96C9979DA02 /* HomeViewModel.swift */; };
+		980754F347FB5A3D556FBB4F /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BAC3DD97CCC9844E1E048B1 /* AnalyticsService.swift */; };
 		9E692D1A69CECD9D34BC5546 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D0CCAC561BC5EDAF033EB0D /* Assets.xcassets */; };
 		9EB5AB5535396DEB80F3BEF1 /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9484FC17E32A7C1DDF9C172 /* PlayerViewModel.swift */; };
 		B6D9B48FBA9FBF0B4F27C075 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3053A5B500C32437308237 /* PlayerView.swift */; };
@@ -32,6 +33,7 @@
 		EB129CC6CE3149F36425CE7D /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9124879700C36AB1C064039F /* APIService.swift */; };
 		F3BB59ECD01C9DFD38EF8AE2 /* GamesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C89929D2D43FB750B202BBB /* GamesView.swift */; };
 		F7B078A4FF6203A095D754A2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65974767E33FDDD9B5E5988 /* ContentView.swift */; };
+		F9F0B9AE061E0E2B3CD0FBC1 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80952C07C2D446402A66978 /* NotificationService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +46,7 @@
 		4884B3E6E16CF9E2AB8EEEEF /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		4D727069F20DFAB7741A9AEA /* PaywallSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallSheetView.swift; sourceTree = "<group>"; };
 		531DE3FC63681D8BB9DF32F1 /* StoreKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitService.swift; sourceTree = "<group>"; };
+		5BAC3DD97CCC9844E1E048B1 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
 		5EB084A30C1356D1217A362A /* NostalgiaBox.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NostalgiaBox.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		61628DD68CB141094328A0AC /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		77A80FEE0E14DD24D37BFB70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -56,6 +59,7 @@
 		9C89929D2D43FB750B202BBB /* GamesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesView.swift; sourceTree = "<group>"; };
 		9E2E8D72CC0D156D86D9313E /* AppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconView.swift; sourceTree = "<group>"; };
 		BDF4CA74AB8DE96C9979DA02 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		C80952C07C2D446402A66978 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		C9484FC17E32A7C1DDF9C172 /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
 		D3AE27E0B8638F62B404C41D /* NostalgiaBox.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NostalgiaBox.entitlements; sourceTree = "<group>"; };
 		DD2D5A36F33716849F1A29DF /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
@@ -188,9 +192,11 @@
 		BEEFA388DE67F52B9CFD3221 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				5BAC3DD97CCC9844E1E048B1 /* AnalyticsService.swift */,
 				9124879700C36AB1C064039F /* APIService.swift */,
 				EC3B09FD390F0C5E2FF0E755 /* DatabaseService.swift */,
 				DD2D5A36F33716849F1A29DF /* KeychainService.swift */,
+				C80952C07C2D446402A66978 /* NotificationService.swift */,
 				531DE3FC63681D8BB9DF32F1 /* StoreKitService.swift */,
 			);
 			path = Services;
@@ -324,6 +330,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EB129CC6CE3149F36425CE7D /* APIService.swift in Sources */,
+				980754F347FB5A3D556FBB4F /* AnalyticsService.swift in Sources */,
 				49E37104F09495C86FAEFF3B /* AppIconView.swift in Sources */,
 				C0FD090DAE3F1AE72142F6AA /* AppState.swift in Sources */,
 				F7B078A4FF6203A095D754A2 /* ContentView.swift in Sources */,
@@ -336,6 +343,7 @@
 				B98A998B7F93D3EA06BDF00F /* Models.swift in Sources */,
 				67DCFCE695A54C979394F696 /* NetworkMonitor.swift in Sources */,
 				094E7FE22F3FF6C87255D773 /* NostalgiaBoxApp.swift in Sources */,
+				F9F0B9AE061E0E2B3CD0FBC1 /* NotificationService.swift in Sources */,
 				625E0CE2878AA9CCD92D2A8F /* OnboardingView.swift in Sources */,
 				DA4B2C915D8A26209BD30EB6 /* PaywallSheetView.swift in Sources */,
 				BB405C9B21B1344DAC01365C /* Pet.swift in Sources */,
