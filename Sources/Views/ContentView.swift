@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedTab: Tab = .home
+    @State private var showOnboarding = false
 
     enum Tab: String, CaseIterable {
         case home = "首页"
@@ -21,6 +22,19 @@ struct ContentView: View {
     }
 
     var body: some View {
+        Group {
+            if !appState.hasCompletedOnboarding {
+                OnboardingView(isPresented: $showOnboarding)
+            } else {
+                mainTabView
+            }
+        }
+        .onAppear {
+            showOnboarding = !appState.hasCompletedOnboarding
+        }
+    }
+
+    private var mainTabView: some View {
         TabView(selection: $selectedTab) {
             HomeView()
                 .tabItem {
@@ -52,5 +66,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .environmentObject(AppState())
+        .environmentObject(AppState.shared)
 }
