@@ -223,11 +223,11 @@ body{background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direct
         </div>
         <div class="sh"><div class="st">📅 历史上的今天</div></div>
         <div class="daily" onclick="loadDaily()">
-          <div class="dE" id="dailyEmoji">📅</div>
+          <div class="dE" id="dailyEmoji">🎮</div>
           <div>
-            <div class="dTi" id="dailyTitle">加载中...</div>
-            <div class="dYr" id="dailyYear"></div>
-            <div class="dDs" id="dailyDesc"></div>
+            <div class="dTi" id="dailyTitle">FC红白机发售</div>
+            <div class="dYr" id="dailyYear">1983年</div>
+            <div class="dDs" id="dailyDesc">1983年7月15日，任天堂FC红白机发售，开启了游戏机时代</div>
           </div>
         </div>
         <div class="sh"><div class="st">⚡ 快速开始</div></div>
@@ -403,16 +403,14 @@ function closeOb(){
 async function loadDaily(){
   try{
     var r=await fetch('http://localhost:3001/content/daily');
+    if(!r.ok) throw new Error('HTTP '+r.status);
     var d=await r.json();
-    document.getElementById('dailyEmoji').textContent=d.emoji||'📅';
-    document.getElementById('dailyTitle').textContent=d.title||'历史上的今天';
-    document.getElementById('dailyYear').textContent=(d.year||'')+'年';
-    document.getElementById('dailyDesc').textContent=d.description||'';
+    document.getElementById('dailyEmoji').textContent=d.emoji||'🎮';
+    document.getElementById('dailyTitle').textContent=d.title||'FC红白机发售';
+    document.getElementById('dailyYear').textContent=(d.year||'1983')+'年';
+    document.getElementById('dailyDesc').textContent=d.description||'1983年7月15日，任天堂FC红白机发售，开启了游戏机时代';
   }catch(e){
-    document.getElementById('dailyTitle').textContent='FC红白机发售';
-    document.getElementById('dailyYear').textContent='1983年';
-    document.getElementById('dailyDesc').textContent='1983年7月15日，任天堂FC红白机发售，开启了游戏机时代';
-    document.getElementById('dailyEmoji').textContent='🎮';
+    // Fallback content already set in HTML - just silently fail
   }
 }
 
@@ -533,11 +531,12 @@ function updateClock(){
 updateClock();
 setInterval(updateClock,30000);
 
+// Always show mainScreen first, then optionally show onboarding
+document.getElementById('mainScreen').style.display='block';
 if(!localStorage.getItem('nb_visited')){
   document.getElementById('onboarding').style.display='flex';
   localStorage.setItem('nb_visited','1');
-}else{
-  document.getElementById('mainScreen').style.display='block';
+} else {
   loadDaily();
 }
 </script>
