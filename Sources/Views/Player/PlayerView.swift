@@ -2,26 +2,20 @@ import SwiftUI
 import AVKit
 
 struct PlayerView: View {
+    @StateObject private var viewModel = PlayerViewModel()
     @State private var showFilePicker = false
-    @State private var player: AVPlayer?
-    @State private var isPlaying = false
-    @State private var currentTime: Double = 0
-    @State private var duration: Double = 0
-    @State private var selectedFormat: String = "万能播放"
-
-    let supportedFormats = ["MP4", "AVI", "MP3", "FLV", "WMV", "MKV", "MOV", "WAV"]
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if let player = player {
+                if let player = viewModel.player {
                     // Video Player
                     VideoPlayer(player: player)
                         .frame(height: 240)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .padding()
                         .onAppear {
-                            duration = player.currentItem?.duration.seconds ?? 0
+                            viewModel.duration = player.currentItem?.duration.seconds ?? 0
                         }
                 } else {
                     // Empty State
@@ -33,7 +27,7 @@ struct PlayerView: View {
                         Text("复古万能播放器")
                             .font(.title2.bold())
 
-                        Text("支持格式：\(supportedFormats.joined(separator: " / "))")
+                        Text("支持格式：\(viewModel.supportedFormats.joined(separator: " / "))")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -52,25 +46,53 @@ struct PlayerView: View {
                 }
 
                 // Playback Controls
-                if player != nil {
+                if viewModel.player != nil {
                     VStack(spacing: 12) {
-                        Slider(value: $currentTime, in: 0...max(duration, 1))
-                            .tint(Color.accentColor)
+                        Slider(value: Binding(
+                            get: { viewModel.currentTime },
+                            set: { viewModel.seek(to: $0) }
+                        ), in: 0...max(viewModel.duration, 1))
+                        .tint(Color.accentColor)
 
                         HStack {
-                            Text(formatTime(currentTime))
+                            Text(viewModel.formatTime(viewModel.currentTime))
                                 .font(.caption.monospacedDigit())
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            Text(formatTime(duration))
+                            Text(viewModel.formatTime(viewModel.duration))
                                 .font(.caption.monospacedDigit())
                                 .foregroundStyle(.secondary)
                         }
 
+                        // Play/Pause
+                        HStack(spacing: 32) {
+                            Button {
+                                viewModel.seek(to: max(0, viewModel.currentTime - 10))
+                            } label: {
+                                Image(systemName: "gobackward.10")
+                                    .font(.title2)
+                            }
+
+                            Button {
+                                viewModel.togglePlayPause()
+                            } label: {
+                                Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                                    .font(.system(size: 50))
+                            }
+
+                            Button {
+                                viewModel.seek(to: min(viewModel.duration, viewModel.currentTime + 10))
+                            } label: {
+                                Image(systemName: "goforward.10")
+                                    .font(.title2)
+                            }
+                        }
+                        .foregroundStyle(.primary)
+
                         // Format Tags
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
-                                ForEach(supportedFormats, id: \.self) { format in
+                                ForEach(viewModel.supportedFormats, id: \.self) { format in
                                     Text(format)
                                         .font(.caption2.weight(.medium))
                                         .padding(.horizontal, 8)
@@ -89,7 +111,7 @@ struct PlayerView: View {
                 // Format Info
                 List {
                     Section("支持的音视频格式") {
-                        ForEach(supportedFormats, id: \.self) { format in
+                        ForEach(viewModel.supportedFormats, id: \.self) { format in
                             HStack {
                                 Text(format)
                                     .font(.subheadline.monospaced())
@@ -132,21 +154,16 @@ struct PlayerView: View {
                 switch result {
                 case .success(let urls):
                     if let url = urls.first {
-                        player = AVPlayer(url: url)
-                        player?.play()
-                        isPlaying = true
+                        // Access security scoped resource
+                        _ = url.startAccessingSecurityScopedResource()
+                        defer { url.stopAccessingSecurityScopedResource() }
+                        viewModel.loadFile(from: url)
                     }
                 case .failure(let error):
                     print("File import error: \(error)")
                 }
             }
         }
-    }
-
-    private func formatTime(_ seconds: Double) -> String {
-        let mins = Int(seconds) / 60
-        let secs = Int(seconds) % 60
-        return String(format: "%02d:%02d", mins, secs)
     }
 }
 
