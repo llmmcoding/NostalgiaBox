@@ -1,0 +1,440 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		094E7FE22F3FF6C87255D773 /* NostalgiaBoxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17805042DC500F52CB05910D /* NostalgiaBoxApp.swift */; };
+		49E37104F09495C86FAEFF3B /* AppIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2E8D72CC0D156D86D9313E /* AppIconView.swift */; };
+		7D8CFBD35593DE0D4D1805B1 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4884B3E6E16CF9E2AB8EEEEF /* HomeView.swift */; };
+		9E692D1A69CECD9D34BC5546 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D0CCAC561BC5EDAF033EB0D /* Assets.xcassets */; };
+		B6D9B48FBA9FBF0B4F27C075 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3053A5B500C32437308237 /* PlayerView.swift */; };
+		C0FD090DAE3F1AE72142F6AA /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86E02E78564E8CC458C8B80D /* AppState.swift */; };
+		D31B512498CC131BAC853B60 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F03F6310EDD074412654915A /* SettingsView.swift */; };
+		F3BB59ECD01C9DFD38EF8AE2 /* GamesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C89929D2D43FB750B202BBB /* GamesView.swift */; };
+		F7B078A4FF6203A095D754A2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65974767E33FDDD9B5E5988 /* ContentView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		17805042DC500F52CB05910D /* NostalgiaBoxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NostalgiaBoxApp.swift; sourceTree = "<group>"; };
+		3D3053A5B500C32437308237 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
+		4884B3E6E16CF9E2AB8EEEEF /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		5EB084A30C1356D1217A362A /* NostalgiaBox.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NostalgiaBox.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		77A80FEE0E14DD24D37BFB70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		86E02E78564E8CC458C8B80D /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		8D0CCAC561BC5EDAF033EB0D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9C89929D2D43FB750B202BBB /* GamesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesView.swift; sourceTree = "<group>"; };
+		9E2E8D72CC0D156D86D9313E /* AppIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconView.swift; sourceTree = "<group>"; };
+		D3AE27E0B8638F62B404C41D /* NostalgiaBox.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NostalgiaBox.entitlements; sourceTree = "<group>"; };
+		F03F6310EDD074412654915A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		F65974767E33FDDD9B5E5988 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0F3F5956A34C3C16E3487355 /* Player */ = {
+			isa = PBXGroup;
+			children = (
+				3D3053A5B500C32437308237 /* PlayerView.swift */,
+			);
+			path = Player;
+			sourceTree = "<group>";
+		};
+		1A7AD39F9AD3F5E39BBEFA6D /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				F03F6310EDD074412654915A /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		252F20EB70E5C29BC072C047 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				77A80FEE0E14DD24D37BFB70 /* Info.plist */,
+				D3AE27E0B8638F62B404C41D /* NostalgiaBox.entitlements */,
+				17805042DC500F52CB05910D /* NostalgiaBoxApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		2AB3B110BB869522E2016AFF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5EB084A30C1356D1217A362A /* NostalgiaBox.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		37773D71570CC2DDDC209F96 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		4DD8FCD5ADEDDA026FD3755C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		61C5838D348D5A141EE3C35D = {
+			isa = PBXGroup;
+			children = (
+				252F20EB70E5C29BC072C047 /* App */,
+				BB62A0B8F6745F38F945E4A9 /* Sources */,
+				8D0CCAC561BC5EDAF033EB0D /* Assets.xcassets */,
+				2AB3B110BB869522E2016AFF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A0A7BCC0282229F53675FA8B /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		BB62A0B8F6745F38F945E4A9 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				4DD8FCD5ADEDDA026FD3755C /* Models */,
+				37773D71570CC2DDDC209F96 /* Resources */,
+				BEEFA388DE67F52B9CFD3221 /* Services */,
+				DE429C3EB176D4114DE11827 /* Utils */,
+				A0A7BCC0282229F53675FA8B /* ViewModels */,
+				BF4931915809A2A19153CCAB /* Views */,
+				86E02E78564E8CC458C8B80D /* AppState.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		BEEFA388DE67F52B9CFD3221 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		BF4931915809A2A19153CCAB /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				FB756B20FFAD7275D6348C77 /* Components */,
+				EB2A7F56C63FE6ECFB8936B5 /* Games */,
+				C8532860F14C196D8BD587E0 /* Home */,
+				0F3F5956A34C3C16E3487355 /* Player */,
+				1A7AD39F9AD3F5E39BBEFA6D /* Settings */,
+				9E2E8D72CC0D156D86D9313E /* AppIconView.swift */,
+				F65974767E33FDDD9B5E5988 /* ContentView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		C8532860F14C196D8BD587E0 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				4884B3E6E16CF9E2AB8EEEEF /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		DE429C3EB176D4114DE11827 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		EB2A7F56C63FE6ECFB8936B5 /* Games */ = {
+			isa = PBXGroup;
+			children = (
+				9C89929D2D43FB750B202BBB /* GamesView.swift */,
+			);
+			path = Games;
+			sourceTree = "<group>";
+		};
+		FB756B20FFAD7275D6348C77 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D79C93FA1BC5C5C60DCFC290 /* NostalgiaBox */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FB37206E2EA1D55B4D7A0BF0 /* Build configuration list for PBXNativeTarget "NostalgiaBox" */;
+			buildPhases = (
+				B033F51F4989904B18E6C9BF /* Sources */,
+				9A71F44F0023898BC14B6EB7 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NostalgiaBox;
+			packageProductDependencies = (
+			);
+			productName = NostalgiaBox;
+			productReference = 5EB084A30C1356D1217A362A /* NostalgiaBox.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		416D8AF604C877BD8F219F38 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					D79C93FA1BC5C5C60DCFC290 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = B19DC6E1CE43CC36A6997ABB /* Build configuration list for PBXProject "NostalgiaBox" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 61C5838D348D5A141EE3C35D;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 2AB3B110BB869522E2016AFF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D79C93FA1BC5C5C60DCFC290 /* NostalgiaBox */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9A71F44F0023898BC14B6EB7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9E692D1A69CECD9D34BC5546 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B033F51F4989904B18E6C9BF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49E37104F09495C86FAEFF3B /* AppIconView.swift in Sources */,
+				C0FD090DAE3F1AE72142F6AA /* AppState.swift in Sources */,
+				F7B078A4FF6203A095D754A2 /* ContentView.swift in Sources */,
+				F3BB59ECD01C9DFD38EF8AE2 /* GamesView.swift in Sources */,
+				7D8CFBD35593DE0D4D1805B1 /* HomeView.swift in Sources */,
+				094E7FE22F3FF6C87255D773 /* NostalgiaBoxApp.swift in Sources */,
+				B6D9B48FBA9FBF0B4F27C075 /* PlayerView.swift in Sources */,
+				D31B512498CC131BAC853B60 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		081C6984845FE4A99283E135 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/NostalgiaBox.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.nostalgiabox.app;
+				SDKROOT = iphoneos;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0D72CC4AF91A9586484752E8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/NostalgiaBox.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.nostalgiabox.app;
+				SDKROOT = iphoneos;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		59C18319ABEE435AF0D70311 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		CB7B92DD2717BD8E5D147546 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B19DC6E1CE43CC36A6997ABB /* Build configuration list for PBXProject "NostalgiaBox" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				59C18319ABEE435AF0D70311 /* Debug */,
+				CB7B92DD2717BD8E5D147546 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FB37206E2EA1D55B4D7A0BF0 /* Build configuration list for PBXNativeTarget "NostalgiaBox" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				081C6984845FE4A99283E135 /* Debug */,
+				0D72CC4AF91A9586484752E8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 416D8AF604C877BD8F219F38 /* Project object */;
+}

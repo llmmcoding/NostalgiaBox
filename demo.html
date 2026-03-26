@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时光机 Demo</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #1a1a2e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+}
+h1 {
+  color: #fff;
+  margin-bottom: 8px;
+  font-size: 24px;
+  letter-spacing: 2px;
+}
+.sub {
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+/* Phone Frame */
+.phone {
+  width: 290px;
+  height: 600px;
+  background: #000;
+  border-radius: 40px;
+  padding: 12px;
+  box-shadow: 0 0 60px rgba(255,100,100,0.15), 0 0 100px rgba(100,100,255,0.1);
+  position: relative;
+}
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 30px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Status Bar */
+.status-bar {
+  height: 44px;
+  background: transparent;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 20px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+}
+.time { letter-spacing: 1px; }
+.icons { display: flex; gap: 4px; align-items: center; }
+.icons span { font-size: 14px; }
+
+/* Tab Bar */
+.tab-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  border-top: 0.5px solid rgba(0,0,0,0.1);
+  padding-bottom: 20px;
+}
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: #888;
+  font-size: 10px;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.tab-item.active { color: #FF6B6B; }
+.tab-item .icon { font-size: 22px; }
+
+/* Screen Container */
+.screen {
+  position: absolute;
+  top: 44px; left: 0; right: 0; bottom: 80px;
+  overflow: hidden;
+  background: #f5f5f7;
+}
+
+/* ---- HOME SCREEN ---- */
+.home-screen { background: #fff; }
+.home-header {
+  padding: 20px 20px 10px;
+  text-align: center;
+}
+.home-header h2 { font-size: 26px; letter-spacing: 4px; }
+.home-header p { font-size: 12px; color: #999; margin-top: 4px; }
+
+.paywall-banner {
+  margin: 10px 16px;
+  background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+@keyframes glow {
+  from { box-shadow: 0 0 10px rgba(255,107,107,0.4); }
+  to { box-shadow: 0 0 20px rgba(255,107,107,0.8); }
+}
+.paywall-banner .left { color: #fff; }
+.paywall-banner .left .t { font-size: 14px; font-weight: 700; }
+.paywall-banner .left .s { font-size: 10px; opacity: 0.85; }
+.paywall-banner .right { color: #fff; font-size: 18px; font-weight: 800; }
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  padding: 14px 16px 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 16px;
+}
+.qcard {
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.qcard:active { transform: scale(0.96); }
+.qcard .emoji { font-size: 32px; margin-bottom: 6px; }
+.qcard .title { font-size: 13px; font-weight: 700; color: #333; }
+.qcard .sub { font-size: 10px; color: #888; margin-top: 2px; }
+.qcard:nth-child(1) { background: rgba(147,51,234,0.12); }
+.qcard:nth-child(2) { background: rgba(59,130,246,0.12); }
+.qcard:nth-child(3) { background: rgba(236,72,153,0.12); }
+.qcard:nth-child(4) { background: rgba(249,115,22,0.12); }
+
+.quote {
+  margin: 14px 16px;
+  background: #f0f0f5;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ---- GAMES SCREEN ---- */
+.games-screen { background: #fff; }
+.games-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.games-tabs::-webkit-scrollbar { display: none; }
+.tab-chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  background: #f0f0f5;
+  color: #555;
+  transition: all 0.2s;
+}
+.tab-chip.active { background: #FF6B6B; color: #fff; }
+
+.games-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 8px 16px;
+}
+.game-card {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fafafa;
+  cursor: pointer;
+  transition: transform 0.2s;
+  border: 0.5px solid rgba(0,0,0,0.06);
+}
+.game-card:active { transform: scale(0.96); }
+.game-thumb {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+}
+.game-info { padding: 8px 10px 10px; }
+.game-info .name { font-size: 12px; font-weight: 700; color: #333; }
+.game-info .cat { font-size: 10px; color: #aaa; margin-top: 2px; }
+
+/* ---- PLAYER SCREEN ---- */
+.player-screen { background: #fff; }
+.player-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+}
+.player-emoji { font-size: 70px; animation: float 3s ease-in-out infinite; }
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.player-title { font-size: 18px; font-weight: 700; color: #333; }
+.player-sub { font-size: 11px; color: #999; text-align: center; line-height: 1.6; }
+.player-btn {
+  background: #FF6B6B;
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  box-shadow: 0 4px 15px rgba(255,107,107,0.4);
+}
+
+/* ---- SETTINGS SCREEN ---- */
+.settings-screen { background: #fff; }
+.settings-list { padding: 0; }
+.settings-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 0.5px solid #f0f0f0;
+  cursor: pointer;
+}
+.settings-item:active { background: #f5f5f5; }
+.settings-item .sicon { font-size: 20px; margin-right: 12px; }
+.settings-item .stext { font-size: 14px; color: #333; flex: 1; }
+.settings-item .sarrow { font-size: 14px; color: #ccc; }
+.settings-badge {
+  background: #FF6B6B;
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-right: 8px;
+}
+.settings-badge.green { background: #34c759; }
+
+/* Detail Screen Overlay */
+.detail-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #fff;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 5;
+}
+.detail-overlay.show { transform: translateX(0); }
+.detail-hero {
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+}
+.detail-hero .big-emoji { font-size: 90px; }
+.detail-hero h3 { font-size: 20px; color: #333; }
+.detail-tags { display: flex; gap: 8px; margin-top: 4px; }
+.detail-tag { font-size: 11px; padding: 3px 10px; background: rgba(0,0,0,0.06); border-radius: 10px; color: #666; }
+.detail-desc { padding: 14px 20px; font-size: 14px; color: #555; line-height: 1.7; text-align: left; }
+.detail-play {
+  margin: 0 20px;
+  background: #FF6B6B;
+  color: #fff;
+  border: none;
+  width: calc(100% - 40px);
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,107,107,0.4);
+}
+.detail-back {
+  position: absolute;
+  top: 14px; left: 14px;
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+/* Loading animation */
+.loading-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 20;
+}
+.loading-overlay.show { opacity: 1; }
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid #f0f0f0;
+  border-top-color: #FF6B6B;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; color: #888; }
+
+/* Caption */
+.caption {
+  color: #666;
+  font-size: 12px;
+  margin-top: 16px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<h1>⏰ 时光机</h1>
+<div class="sub">怀旧杀时间神器 · iOS App Demo</div>
+
+<div class="phone" id="phone">
+  <div class="phone-screen">
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <div class="icons">
+        <span>📶</span><span>🔋</span>
+      </div>
+    </div>
+
+    <!-- Screen Area -->
+    <div class="screen" id="screen">
+
+      <!-- HOME -->
+      <div class="home-screen" id="homeScreen">
+        <div class="home-header">
+          <h2>⏰ 时光机</h2>
+          <p>带你穿越回青春</p>
+        </div>
+
+        <div class="paywall-banner" onclick="showPaywall()">
+          <div class="left">
+            <div class="t">🌟 解锁全部内容</div>
+            <div class="s">一次购买，终身怀旧</div>
+          </div>
+          <div class="right">$2.99</div>
+        </div>
+
+        <div class="section-title">快速开始</div>
+        <div class="quick-grid">
+          <div class="qcard" onclick="switchTab(1)">
+            <div class="emoji">🎮</div>
+            <div class="title">像素游戏</div>
+            <div class="sub">魔塔·RPG·跑酷</div>
+          </div>
+          <div class="qcard" onclick="switchTab(2)">
+            <div class="emoji">📻</div>
+            <div class="title">复古播放器</div>
+            <div class="sub">万能音视频</div>
+          </div>
+          <div class="qcard">
+            <div class="emoji">🐣</div>
+            <div class="title">电子宠物</div>
+            <div class="sub">当年电子鸡</div>
+          </div>
+          <div class="qcard">
+            <div class="emoji">📅</div>
+            <div class="title">怀旧日历</div>
+            <div class="sub">2000年代今天</div>
+          </div>
+        </div>
+
+        <div class="quote">"那些年，我们没有智能手机，<br>但我们有最纯粹的快乐。"</div>
+      </div>
+
+      <!-- GAMES -->
+      <div class="games-screen" id="gamesScreen" style="display:none">
+        <div style="padding:14px 16px 6px">
+          <div style="font-size:18px;font-weight:700;color:#333">🎮 游戏</div>
+        </div>
+        <div class="games-tabs">
+          <div class="tab-chip active" onclick="filterGames(this)">🎯 全部</div>
+          <div class="tab-chip" onclick="filterGames(this)">🏰 魔塔</div>
+          <div class="tab-chip" onclick="filterGames(this)">⚔️ 像素RPG</div>
+          <div class="tab-chip" onclick="filterGames(this)">🏃 跑酷</div>
+          <div class="tab-chip" onclick="filterGames(this)">🧩 休闲</div>
+        </div>
+        <div class="games-grid" id="gamesGrid">
+          <div class="game-card" onclick="openGame()">
+            <div class="game-thumb" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">🏰</div>
+            <div class="game-info"><div class="name">魔塔·黄金大陆</div><div class="cat">魔塔 · 中等</div></div>
+          </div>
+          <div class="game-card" onclick="openGame()">
+            <div class="game-thumb" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)">⚔️</div>
+            <div class="game-info"><div class="name">像素勇者</div><div class="cat">像素RPG · 中等</div></div>
+          </div>
+          <div class="game-card" onclick="openGame()">
+            <div class="game-thumb" style="background:linear-gradient(135deg,#34d399,#059669)">🏃</div>
+            <div class="game-info"><div class="name">跳跳像素人</div><div class="cat">跑酷 · 简单</div></div>
+          </div>
+          <div class="game-card" onclick="openGame()">
+            <div class="game-thumb" style="background:linear-gradient(135deg,#60a5fa,#2563eb)">🧩</div>
+            <div class="game-info"><div class="name">宠物小精灵</div><div class="cat">休闲 · 简单</div></div>
+          </div>
+          <div class="game-card" onclick="openGame()">
+            <div class="game-thumb" style="background:linear-gradient(135deg,#f87171,#dc2626)">🐉</div>
+            <div class="game-info"><div class="name">龙之谷</div><div class="cat">像素RPG · 困难</div></div>
+          </div>
+          <div class="game-card" onclick="openGame()">
+            <div class="game-thumb" style="background:linear-gradient(135deg,#fb923c,#ea580c)">🟧</div>
+            <div class="game-info"><div class="name">方块跑酷</div><div class="cat">跑酷 · 简单</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLAYER -->
+      <div class="player-screen" id="playerScreen" style="display:none">
+        <div class="player-empty">
+          <div class="player-emoji">📻</div>
+          <div class="player-title">复古万能播放器</div>
+          <div class="player-sub">支持 MP4 / AVI / MP3 / FLV<br>WMK / MKV / MOV / WAV</div>
+          <button class="player-btn" onclick="showLoading()">📂 选择本地文件</button>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="settings-screen" id="settingsScreen" style="display:none">
+        <div style="padding:14px 16px 10px">
+          <div style="font-size:18px;font-weight:700;color:#333">⚙️ 设置</div>
+        </div>
+        <div class="settings-list">
+          <div class="settings-item">
+            <div class="sicon">🍎</div>
+            <div class="stext">Sign in with Apple</div>
+            <div class="sarrow">›</div>
+          </div>
+          <div class="settings-item">
+            <div class="sicon">🌙</div>
+            <div class="stext">外观</div>
+            <div style="font-size:12px;color:#999">跟随系统</div>
+            <div class="sarrow">›</div>
+          </div>
+          <div class="settings-item">
+            <div class="sicon">🔒</div>
+            <div class="stext">解锁完整版</div>
+            <div style="font-size:12px;color:#FF6B6B;margin-right:8px">$2.99</div>
+            <div class="sarrow">›</div>
+          </div>
+          <div class="settings-item">
+            <div class="sicon">📄</div>
+            <div class="stext">隐私政策</div>
+            <div class="sarrow">›</div>
+          </div>
+          <div class="settings-item">
+            <div class="sicon">📃</div>
+            <div class="stext">用户协议</div>
+            <div class="sarrow">›</div>
+          </div>
+          <div class="settings-item">
+            <div class="sicon">💬</div>
+            <div class="stext">联系客服 / 反馈</div>
+            <div class="sarrow">›</div>
+          </div>
+          <div class="settings-item">
+            <div class="sicon">🔄</div>
+            <div class="stext">恢复购买</div>
+            <div class="sarrow">›</div>
+          </div>
+          <div class="settings-item">
+            <div class="sicon">🌟</div>
+            <div class="stext">给我们评分</div>
+            <div style="font-size:14px">⭐</div>
+          </div>
+          <div class="settings-item">
+            <div class="sicon">ℹ️</div>
+            <div class="stext">版本</div>
+            <div style="font-size:12px;color:#999">1.0.0 (1)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Detail Overlay -->
+      <div class="detail-overlay" id="gameDetail">
+        <div class="detail-back" onclick="closeDetail()">←</div>
+        <div class="detail-hero" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">
+          <div class="big-emoji">🏰</div>
+          <h3>魔塔·黄金大陆</h3>
+          <div class="detail-tags">
+            <div class="detail-tag">🏰 魔塔</div>
+            <div class="detail-tag">⭐ 中等</div>
+          </div>
+        </div>
+        <div class="detail-desc">经典魔塔复刻版！50层紧张刺激的地下城挑战。收集金币、升级属性、击败怪物，穿越50层最终拯救公主！</div>
+        <button class="detail-play" onclick="showLoading()">▶ 开始游戏</button>
+      </div>
+
+      <!-- Loading Overlay -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">游戏加载中...</div>
+      </div>
+
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item active" id="tab0" onclick="switchTab(0)">
+        <div class="icon">🏠</div>
+        <div>首页</div>
+      </div>
+      <div class="tab-item" id="tab1" onclick="switchTab(1)">
+        <div class="icon">🎮</div>
+        <div>游戏</div>
+      </div>
+      <div class="tab-item" id="tab2" onclick="switchTab(2)">
+        <div class="icon">📻</div>
+        <div>播放</div>
+      </div>
+      <div class="tab-item" id="tab3" onclick="switchTab(3)">
+        <div class="icon">⚙️</div>
+        <div>设置</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<p class="caption">👆 点击卡片 / Tab 切换 · 全屏动图 Demo</p>
+
+<script>
+const screens = ['homeScreen', 'gamesScreen', 'playerScreen', 'settingsScreen'];
+const tabs = ['tab0', 'tab1', 'tab2', 'tab3'];
+
+function switchTab(idx) {
+  screens.forEach((s, i) => {
+    document.getElementById(s).style.display = i === idx ? 'block' : 'none';
+    document.getElementById(tabs[i]).className = 'tab-item' + (i === idx ? ' active' : '');
+  });
+  // Reset detail
+  document.getElementById('gameDetail').classList.remove('show');
+}
+
+function filterGames(el) {
+  document.querySelectorAll('.tab-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function openGame() {
+  document.getElementById('gameDetail').classList.add('show');
+}
+
+function closeDetail() {
+  document.getElementById('gameDetail').classList.remove('show');
+}
+
+function showLoading() {
+  const lo = document.getElementById('loadingOverlay');
+  lo.classList.add('show');
+  setTimeout(() => lo.classList.remove('show'), 1800);
+}
+
+function showPaywall() {
+  alert('🌟 解锁全部内容 — $2.99');
+}
+
+// Auto-play demo: cycle tabs every 4s
+let tabIdx = 0;
+let demoInterval = setInterval(() => {
+  // Only auto-cycle when not interacting - simplified: always cycle
+  tabIdx = (tabIdx + 1) % 4;
+  switchTab(tabIdx);
+}, 4000);
+</script>
+
+</body>
+</html>
