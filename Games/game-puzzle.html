@@ -23,6 +23,8 @@ canvas{display:block;image-rendering:pixelated}
 .dexentry{background:#2c3e50;border:2px solid #555;padding:10px;width:80px;text-align:center;border-radius:6px;font-size:12px}
 .dexentry.caught{border-color:#2ecc71;background:#1a3a2a}
 .dexentry .emoji{font-size:28px}
+.dexentry.new-entry{animation:dexReveal 0.6s ease-out}
+@keyframes dexReveal{0%{background:#fff;transform:scale(1.1)}100%{background:#2c3e50;transform:scale(1)}}
 #closedex{background:#7f8c8d;border:none;color:#fff;padding:8px 20px;font-size:14px;cursor:pointer;margin:10px;font-family:inherit;border-radius:4px}
 #startscreen{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:40}
 #startscreen h1{font-size:24px;margin-bottom:8px;color:#e74c3c}
@@ -32,7 +34,6 @@ canvas{display:block;image-rendering:pixelated}
 #gameover h2{font-size:22px;color:#e74c3c}
 #gameover p{font-size:14px;margin:6px 0}
 #restartbtn{background:#27ae60;border:none;color:#fff;padding:10px 30px;font-size:15px;cursor:pointer;margin-top:12px;font-family:inherit;border-radius:6px}
-#combo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32px;color:#f1c40f;text-shadow:2px 2px 4px #000;pointer-events:none;display:none;z-index:25}
 </style>
 </head>
 <body>
@@ -47,7 +48,6 @@ canvas{display:block;image-rendering:pixelated}
  <div>集满精灵球捉精灵!</div>
 </div>
 <button class="pokedexbtn" id="opendex">📖 图鉴</button>
-<div id="combo"></div>
 <div id="startscreen">
  <h1>🔮 宠物小精灵三消</h1>
  <p>点击交换相邻两个元素</p>
@@ -60,8 +60,8 @@ canvas{display:block;image-rendering:pixelated}
  <button id="restartbtn">再来一局</button>
 </div>
 <div id="catchmodal">
- <h2>🎉 精灵球满了!</h2>
- <p style="font-size:13px;color:#aaa;margin-bottom:10px">选择一只精灵尝试捕捉:</p>
+ <h2 id="catchtitle">🎉 精灵球满了!</h2>
+ <p id="catchprompt" style="font-size:13px;color:#aaa;margin-bottom:10px;transition:opacity .3s">选择一只精灵尝试捕捉:</p>
  <div id="catchoptions"></div>
 </div>
 <div id="dexmodal">
@@ -82,95 +82,138 @@ const POKEMON=[
  {name:'超梦',emoji:'⚡',color:'#9b59b6',bg:'#8e44ad'},
 ];
 const EMOJIS=['⚡','🔥','🐢','🌱','⭐','💎'];
+const TILE_COLORS=['#3498db','#e74c3c','#2ecc71','#9b59b6','#f1c40f','#1abc9c'];
 let board=[],score=0,balls=0,combo=0,frame=0,gameState='menu';
 let selected=null,animating=false,gameOver=false;
 let highScore=parseInt(localStorage.getItem('puz_hi')||'0');
 let caughtPoke=JSON.parse(localStorage.getItem('puz_caught')||'[]');
 let dexSeen=JSON.parse(localStorage.getItem('puz_seen')||'[]');
+let tileRX=[],tileRY=[];
+let particles=[],popups=[],comboTexts=[],sparkles=[];
+let swapAnims=[],invalidShakes=[];
+let catchModal={showing:false,selectedPoke:null,result:null,phase:0,phaseTimer:0,cb:null};
+let dexReveal={active:false,progress:0,species:-1,entryEl:null};
+let shake={x:0,y:0,intensity:0,duration:0,startTime:0};
+let hiScoreCeleb={active:false,progress:0,value:0};
 function resize(){
  const s=Math.min(window.innerWidth/W,window.innerHeight/H);
  C.style.width=W*s+'px';C.style.height=H*s+'px';
 }
 window.addEventListener('resize',resize);resize();
+function easeOutBounce(t){
+ if(t<1/2.75)return 7.5625*t*t;
+ if(t<2/2.75){t-=1.5/2.75;return 7.5625*t*t+0.75;}
+ if(t<2.5/2.75){t-=2.25/2.75;return 7.5625*t*t+0.9375;}
+ t-=2.625/2.75;return 7.5625*t*t+0.984375;
+}
+function easeOutBack(t){const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);}
 function init(){
- board=[];
+ board=[];tileRX=[];tileRY=[];
  for(let r=0;r<ROWS;r++){
-  board[r]=[];
+  board[r]=[];tileRX[r]=[];tileRY[r]=[];
   for(let c=0;c<COLS;c++){
    let v;
    do{v=Math.floor(Math.random()*EMOJIS.length);}while(
     (c>=2&&board[r][c-1]===v&&board[r][c-2]===v)||
     (r>=2&&board[r-1][c]===v&&board[r-2][c]===v)
    );
-   board[r][c]=v;
+   board[r][c]=v;tileRX[r][c]=OX+c*TILE;tileRY[r][c]=OY+r*TILE;
   }
  }
  score=0;balls=0;combo=0;selected=null;animating=false;gameOver=false;
+ particles=[];popups=[];comboTexts=[];sparkles=[];
+ swapAnims=[];invalidShakes=[];
+ catchModal={showing:false,selectedPoke:null,result:null,phase:0,phaseTimer:0,cb:null};
+ dexReveal={active:false,progress:0,species:-1,entryEl:null};
+ shake={x:0,y:0,intensity:0,duration:0,startTime:0};
+ hiScoreCeleb={active:false,progress:0,value:0};
 }
 function getTile(r,c){return {x:OX+c*TILE,y:OY+r*TILE,w:TILE,h:TILE};}
+function spawnMatchParticles(r,c,color){
+ let cx=OX+c*TILE+TILE/2,cy=OY+r*TILE+TILE/2;
+ let count=4+Math.floor(Math.random()*3);
+ for(let i=0;i<count;i++){
+  let angle=(Math.PI*2*i/count)+Math.random()*0.5;
+  let speed=40+Math.random()*60,life=0.2+Math.random()*0.15;
+  particles.push({x:cx,y:cy,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life,maxLife:life,color,size:3+Math.random()*3});
+ }
+}
+function spawnScorePopup(r,c,pts){
+ let cx=OX+c*TILE+TILE/2,cy=OY+r*TILE+TILE/2;
+ popups.push({x:cx,y:cy,text:'+'+pts,color:'#ffd700',life:1.0,maxLife:1.0,vy:-90});
+}
+function spawnComboText(comboN,pts,color){comboTexts.push({text:'×'+comboN+' 连消！',x:W/2,y:H/2-60,scale:0.5,life:1.0,maxLife:1.0,color});}
+function triggerShake(intensity){shake.intensity=intensity;shake.duration=200;shake.startTime=performance.now();}
+function spawnSparkle(){if(sparkles.length>=3)return;let r=Math.floor(Math.random()*ROWS),c=Math.floor(Math.random()*COLS);sparkles.push({r,c,life:0,maxLife:0.5,phase:Math.random()*Math.PI*2});}
 function drawTile(r,c){
- let t=getTile(r,c);
  let v=board[r][c];
- let e=EMOJIS[v];
- let bob=Math.sin(frame*0.05+c*0.5+r*0.7)*2;
- let col=['#3498db','#e74c3c','#2ecc71','#9b59b6','#f1c40f','#1abc9c'][v];
+ if(v===-1||v===undefined)return;
+ let e=EMOJIS[v],col=['#3498db','#e74c3c','#2ecc71','#9b59b6','#f1c40f','#1abc9c'][v],bob=Math.sin(frame*0.05+c*0.5+r*0.7)*2;
+ let tx=tileRX[r][c],ty=tileRY[r][c];
  let sel=(selected&&selected.r===r&&selected.c===c);
- X.fillStyle=sel?'rgba(255,255,255,0.3)':'rgba(0,0,0,0.2)';
- X.fillRect(t.x+1,t.y+1,t.w-2,t.h-2);
- X.strokeStyle=sel?'#fff':'rgba(255,255,255,0.1)';
- X.lineWidth=sel?3:1;
- X.strokeRect(t.x+1,t.y+1,t.w-2,t.h-2);
- X.font=sel?'bold 22px serif':'20px serif';
- X.textAlign='center';X.textBaseline='middle';
- X.fillStyle=col;
- X.fillText(e,t.x+t.w/2,t.y+t.h/2+bob);
+ if(sel){
+  let pulse=0.5+0.5*Math.sin(frame*0.12);
+  X.shadowColor='rgba(255,215,0,'+(0.6+0.4*pulse)+')';X.shadowBlur=12+pulse*8;
+  X.strokeStyle='rgba(255,215,0,'+(0.7+0.3*pulse)+')';X.lineWidth=3;
+  X.strokeRect(tx+1,ty+1,TILE-2,TILE-2);X.shadowBlur=0;
+ } else {X.strokeStyle='rgba(255,255,255,0.1)';X.lineWidth=1;X.strokeRect(tx+1,ty+1,TILE-2,TILE-2);}
+ X.fillStyle=sel?'rgba(255,255,255,0.15)':'rgba(0,0,0,0.25)';X.fillRect(tx+1,ty+1,TILE-2,TILE-2);
+ for(let sp of sparkles){if(sp.r===r&&sp.c===c){let fade=Math.sin(sp.life/sp.maxLife*Math.PI);let sx=tx+TILE/2+Math.cos(sp.phase+frame*0.03)*8,sy=ty+TILE/2+Math.sin(sp.phase+frame*0.03)*8;X.globalAlpha=fade*0.8;X.fillStyle='#fff';X.beginPath();X.arc(sx,sy,2,0,Math.PI*2);X.fill();X.globalAlpha=1;}}
+ X.font='20px serif';X.textAlign='center';X.textBaseline='middle';X.fillStyle=col;
+ X.fillText(e,tx+TILE/2,ty+TILE/2+bob);
+}
+function drawParticles(dt){
+ for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=200*dt;p.life-=dt;if(p.life<=0){particles.splice(i,1);continue;}let a=p.life/p.maxLife;X.globalAlpha=a;X.fillStyle=p.color;X.beginPath();X.arc(p.x,p.y,p.size*a,0,Math.PI*2);X.fill();}X.globalAlpha=1;
+}
+function drawPopups(dt){
+ X.font='bold 14px Courier New';X.textAlign='center';X.textBaseline='middle';
+ for(let i=popups.length-1;i>=0;i--){let p=popups[i];p.y+=p.vy*dt;p.life-=dt;if(p.life<=0){popups.splice(i,1);continue;}X.globalAlpha=p.life/p.maxLife;X.fillStyle=p.color;X.shadowColor='rgba(0,0,0,0.5)';X.shadowBlur=4;X.fillText(p.text,p.x,p.y);X.shadowBlur=0;}X.globalAlpha=1;
+}
+function drawComboTexts(dt){
+ for(let i=comboTexts.length-1;i>=0;i--){let c=comboTexts[i];c.life-=dt;if(c.life<=0){comboTexts.splice(i,1);continue;}let t=1-c.life/c.maxLife;let scale=0.5+easeOutBack(Math.min(t*1.2,1))*1.0;c.scale=scale;X.save();X.translate(c.x,c.y);X.scale(scale,scale);X.globalAlpha=c.life/c.maxLife;X.fillStyle=c.color;X.shadowColor='rgba(0,0,0,0.8)';X.shadowBlur=8;X.font='bold 26px Courier New';X.textAlign='center';X.textBaseline='middle';X.fillText(c.text,0,0);X.shadowBlur=0;X.restore();}X.globalAlpha=1;
+}
+function drawBallBar(){
+ let barW=200,bx=W/2-barW/2,by=H-40,fill=balls/10;
+ if(fill>0&&fill<1){let pulse=0.5+0.5*Math.sin(frame*0.1);X.shadowColor='rgba(231,76,60,'+(0.3+0.4*pulse)+')';X.shadowBlur=8+pulse*6;}
+ else if(fill>=1){let flash=0.5+0.5*Math.sin(frame*0.2);X.shadowColor='rgba(241,196,15,'+(0.6+0.4*flash)+')';X.shadowBlur=15+flash*10;}
+ X.fillStyle='#222';X.fillRect(bx-1,by-1,barW+2,16);X.fillStyle='#333';X.fillRect(bx,by,barW,14);
+ let r=Math.floor(50+fill*200),g=Math.floor(50*(1-fill));X.fillStyle='rgb('+r+','+g+',60)';X.fillRect(bx,by,barW*fill,14);
+ X.strokeStyle='#555';X.lineWidth=2;X.strokeRect(bx,by,barW,14);X.shadowBlur=0;
+ for(let i=0;i<10;i++){let dx=bx+i*(barW/10)+barW/20;if(i<balls){let pulse=Math.sin(frame*0.08+i*0.5)*1;X.font='10px serif';X.textAlign='center';X.textBaseline='middle';X.fillText('🔮',dx,by-6+pulse);}}
 }
 function draw(){
- X.fillStyle='#1a1a2e';X.fillRect(0,0,W,H);
- // header
- X.fillStyle='rgba(255,255,255,0.05)';
- X.fillRect(0,0,W,OY);
- X.fillStyle='#fff';X.font='bold 18px Courier New';X.textAlign='left';X.textBaseline='top';
- X.fillText('🔮 三消',10,12);
- X.font='14px Courier New';X.textAlign='right';
- X.fillStyle='#f1c40f';
- X.fillText('🏆 '+highScore, W-10,12);
- X.fillStyle='#aaa';X.font='12px Courier New';
- X.fillText('得分:'+score+' 球:'+balls, W-10,34);
- // board bg
- X.fillStyle='#0d0d1e';
- X.fillRect(OX-2,OY-2,COLS*TILE+4,ROWS*TILE+4);
+ let now=performance.now(),dt=1/60;
+ if(shake.duration>0){let elapsed=now-shake.startTime;if(elapsed<shake.duration){let t=elapsed/shake.duration,decay=1-t;shake.x=(Math.random()-0.5)*2*shake.intensity*decay;shake.y=(Math.random()-0.5)*2*shake.intensity*decay;}else{shake.x=0;shake.y=0;shake.duration=0;}}
+ if(Math.random()<0.02)spawnSparkle();
+ for(let i=sparkles.length-1;i>=0;i--){sparkles[i].life+=dt;if(sparkles[i].life>sparkles[i].maxLife)sparkles.splice(i,1);}
+ for(let i=swapAnims.length-1;i>=0;i--){let sa=swapAnims[i];sa.progress+=dt*(1000/150);if(sa.progress>=1){let tmp=board[sa.r1][sa.c1];board[sa.r1][sa.c1]=board[sa.r2][sa.c2];board[sa.r2][sa.c2]=tmp;let tRx=tileRX[sa.r1][sa.c1],tRy=tileRY[sa.r1][sa.c1];tileRX[sa.r1][sa.c1]=tileRX[sa.r2][sa.c2];tileRY[sa.r1][sa.c1]=tileRY[sa.r2][sa.c2];tileRX[sa.r2][sa.c2]=tRx;tileRY[sa.r2][sa.c2]=tRy;swapAnims.splice(i,1);}else{let t=sa.progress,x1=OX+sa.c1*TILE,y1=OY+sa.r1*TILE,x2=OX+sa.c2*TILE,y2=OY+sa.r2*TILE;tileRX[sa.r1][sa.c1]=x1+(x2-x1)*t;tileRY[sa.r1][sa.c1]=y1+(y2-y1)*t;tileRX[sa.r2][sa.c2]=x2+(x1-x2)*t;tileRY[sa.r2][sa.c2]=y2+(y1-y2)*t;}}
+ for(let i=invalidShakes.length-1;i>=0;i--){let iss=invalidShakes[i];iss.progress+=dt*(1000/150);if(iss.progress>=1){tileRX[iss.r1][iss.c1]=OX+iss.c1*TILE;tileRY[iss.r1][iss.c1]=OY+iss.r1*TILE;tileRX[iss.r2][iss.c2]=OX+iss.c2*TILE;tileRY[iss.r2][iss.c2]=OY+iss.r2*TILE;invalidShakes.splice(i,1);}else{let t=iss.progress,sh=Math.sin(t*Math.PI*4)*4*(1-t);tileRX[iss.r1][iss.c1]=OX+iss.c1*TILE+sh;tileRX[iss.r2][iss.c2]=OX+iss.c2*TILE-sh;}}
+ if(hiScoreCeleb.active){hiScoreCeleb.progress+=dt*0.8;if(hiScoreCeleb.progress>=1)hiScoreCeleb.active=false;}
+ if(dexReveal.active){dexReveal.progress+=dt*2;if(dexReveal.entryEl){let t=dexReveal.progress;if(t<0.3){dexReveal.entryEl.style.background='#fff';dexReveal.entryEl.style.transform='scale(1.05)';}else{dexReveal.entryEl.style.background='';dexReveal.entryEl.style.transform='';}}if(dexReveal.progress>1){dexReveal.active=false;if(dexReveal.entryEl){dexReveal.entryEl.classList.remove('new-entry');dexReveal.entryEl=null;}}}
+ X.save();X.translate(shake.x,shake.y);
+ X.fillStyle='#1a1a2e';X.fillRect(-10,-10,W+20,H+20);
+ X.fillStyle='rgba(255,255,255,0.05)';X.fillRect(0,0,W,OY);
+ X.fillStyle='#fff';X.font='bold 18px Courier New';X.textAlign='left';X.textBaseline='top';X.fillText('🔮 三消',10,12);
+ if(hiScoreCeleb.active){let t=hiScoreCeleb.progress,flash=Math.sin(t*20)*0.5+0.5;X.fillStyle='rgba(255,215,0,'+(0.6+0.4*flash)+')';X.shadowColor='rgba(255,215,0,0.8)';X.shadowBlur=10+flash*10;}else{X.fillStyle='#f1c40f';}
+ X.font='bold 14px Courier New';X.textAlign='right';X.textBaseline='top';X.fillText('🏆 '+highScore,W-10,12);X.shadowBlur=0;
+ X.fillStyle='#aaa';X.font='12px Courier New';X.fillText('得分:'+score+' 球:'+balls,W-10,34);
+ X.fillStyle='#0d0d1e';X.fillRect(OX-3,OY-3,COLS*TILE+6,ROWS*TILE+6);
  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)drawTile(r,c);
- // ball bar
- let barW=200,bx=W/2-barW/2,by=H-40;
- X.fillStyle='#333';X.fillRect(bx,by,barW,14);
- X.fillStyle='#e74c3c';
- X.fillRect(bx,by,barW*(balls/10),14);
- X.strokeStyle='#555';X.lineWidth=2;
- X.strokeRect(bx,by,barW,14);
- X.fillStyle='#fff';X.font='11px Courier New';X.textAlign='center';X.textBaseline='bottom';
- X.fillText('🔮 '.repeat(balls),W/2,by);
-}
-function showCombo(txt){
- let el=document.getElementById('combo');
- el.textContent=txt;el.style.display='block';
- setTimeout(()=>el.style.display='none',800);
+ drawParticles(dt);drawPopups(dt);drawComboTexts(dt);drawBallBar();
+ if(hiScoreCeleb.active){let t=hiScoreCeleb.progress;X.globalAlpha=Math.max(0,1-t*1.5);X.fillStyle='#ffd700';X.font='bold 14px Courier New';X.textAlign='right';X.textBaseline='top';X.shadowColor='rgba(255,215,0,0.8)';X.shadowBlur=10;X.fillText('+'+hiScoreCeleb.value+' 破纪录！',W-10,34);X.shadowBlur=0;X.globalAlpha=1;}
+ X.restore();
 }
 function tryMove(r1,c1,r2,c2){
  let dr=Math.abs(r1-r2),dc=Math.abs(c1-c2);
  if(dr+dc!==1)return;
+ if(swapAnims.length>0||invalidShakes.length>0)return;
  let t=board[r1][c1];board[r1][c1]=board[r2][c2];board[r2][c2]=t;
  let matches=findMatches();
- if(matches.length===0){
-  board[r2][c2]=board[r1][c1];board[r1][c1]=t;return;
- }
- animating=true;
- selected={r:r2,c:c2};
- processMatches(matches,()=>{
-  dropTiles(()=>{
-   fillBoard(()=>{animating=false;selected=null;});
-  });
- });
+ if(matches.length===0){board[r2][c2]=board[r1][c1];board[r1][c1]=t;invalidShakes.push({r1,c1,r2,c2,progress:0});tileRX[r1][c1]=OX+c1*TILE;tileRY[r1][c1]=OY+r1*TILE;tileRX[r2][c2]=OX+c2*TILE;tileRY[r2][c2]=OY+r2*TILE;return;}
+ animating=true;selected={r:r2,c:c2};
+ tileRX[r1][c1]=OX+c1*TILE;tileRY[r1][c1]=OY+r1*TILE;tileRX[r2][c2]=OX+c2*TILE;tileRY[r2][c2]=OY+r2*TILE;
+ swapAnims.push({r1,c1,r2,c2,progress:0});
+ processMatches(matches,()=>{dropTiles(()=>{fillBoard(()=>{animating=false;selected=null;swapAnims=[];});});});
 }
 function findMatches(){
  let m=new Set();
@@ -195,29 +238,17 @@ function findMatches(){
 function processMatches(matches,cb){
  if(matches.length===0){cb();return;}
  animating=true;
- let pts=matches.length;
- combo++;
- let mul=combo>1?combo:1;
- score+=pts*10*mul;
+ let pts=matches.length;combo++;let mul=combo>1?combo:1;let gained=pts*10*mul;
+ let oldHi=highScore;score+=gained;
+ if(score>highScore){highScore=score;localStorage.setItem('puz_hi',highScore);if(score>oldHi){hiScoreCeleb={active:true,progress:0,value:gained};}}
  balls=Math.min(10,balls+Math.floor(pts/3));
- if(combo>1)showCombo(combo+'连消! +'+pts*10*mul);
- // save seen
- matches.forEach(m=>{
-  let v=board[m.r][m.c];
-  if(!dexSeen.includes(v)){dexSeen.push(v);localStorage.setItem('puz_seen',JSON.stringify(dexSeen));}
- });
- // clear
- matches.forEach(m=>board[m.r][m.c]=-1);
- setTimeout(()=>{
-  if(balls>=10&&matches.length>0){showCatchModal(cb);return;}
-  dropTiles(()=>{
-   fillBoard(()=>{
-    let m2=findMatches();
-    if(m2.length>0)processMatches(m2,cb);
-    else{combo=0;cb();}
-   });
-  });
- },150);
+ let color='#f1c40f';
+ if(matches.length>0){let v=board[matches[0].r][matches[0].c];if(v>=0&&v<TILE_COLORS.length)color=TILE_COLORS[v];}
+ if(combo>1)spawnComboText(combo,gained,color);
+ if(matches.length>=5)triggerShake(5);else if(matches.length>=4)triggerShake(3);
+ matches.forEach(m=>{let v=board[m.r][m.c];if(!dexSeen.includes(v)){dexSeen.push(v);localStorage.setItem('puz_seen',JSON.stringify(dexSeen));}});
+ matches.forEach(m=>{let v=board[m.r][m.c],col=TILE_COLORS[v]||'#fff';spawnMatchParticles(m.r,m.c,col);spawnScorePopup(m.r,m.c,pts*10);board[m.r][m.c]=-1;});
+ setTimeout(()=>{if(balls>=10&&matches.length>0){showCatchModal(cb);return;}dropTiles(()=>{fillBoard(()=>{let m2=findMatches();if(m2.length>0)processMatches(m2,cb);else{combo=0;cb();}});});},180);
 }
 function dropTiles(cb){
  let moved=false;
@@ -225,63 +256,64 @@ function dropTiles(cb){
   let write=ROWS-1;
   for(let r=ROWS-1;r>=0;r--){
    if(board[r][c]!==-1){
-    if(r!==write){board[write][c]=board[r][c];board[r][c]=-1;moved=true;}
+    if(r!==write){
+     board[write][c]=board[r][c];board[r][c]=-1;
+     let fromY=tileRY[r][c],toY=OY+write*TILE;
+     tileRY[r][c]=fromY;let startTime=performance.now(),dur=250+Math.abs(write-r)*30;
+     (function(fr,fc,fy,ty,st,d){
+      function anim(){let t=Math.min(1,(performance.now()-st)/d);tileRY[fr][fc]=fy+(ty-fy)*easeOutBounce(t);if(t<1)requestAnimationFrame(anim);else tileRY[fr][fc]=ty;}
+      anim();
+     })(write,c,fromY,toY,startTime,dur);
+     moved=true;
+    }
     write--;
    }
   }
  }
- setTimeout(cb,moved?100:0);
+ setTimeout(cb,moved?280:0);
 }
 function fillBoard(cb){
- let changed=false;
- for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
-  if(board[r][c]===-1){board[r][c]=Math.floor(Math.random()*EMOJIS.length);changed=true;}
- }
- if(changed)setTimeout(()=>fillBoard(cb),80);else cb();
+ let changed=false,newTiles=[];
+ for(let r=0;r<ROWS;r++){for(let c=0;c<COLS;c++){if(board[r][c]===-1){board[r][c]=Math.floor(Math.random()*EMOJIS.length);changed=true;tileRX[r][c]=OX+c*TILE;tileRY[r][c]=OY+(r-ROWS)*TILE;let delay=r*50,startTime=performance.now()+delay,dur=300;newTiles.push({r,c,fromY:OY+(r-ROWS)*TILE,toY:OY+r*TILE,startTime,dur});}}}
+ if(!changed){cb();return;}
+ function animNew(){let now=performance.now(),allDone=true;for(let nt of newTiles){let elapsed=now-nt.startTime;if(elapsed<0){allDone=false;continue;}let t=Math.min(1,elapsed/nt.dur);tileRY[nt.r][nt.c]=nt.fromY+(nt.toY-nt.fromY)*easeOutBounce(t);if(t<1)allDone=false;}if(!allDone){requestAnimationFrame(animNew);}else{cb();}}
+ animNew();
 }
 function showCatchModal(cb){
  gameState='catch';
- let options=document.getElementById('catchoptions');
- let choices=[];
- while(choices.length<3){
-  let p=Math.floor(Math.random()*POKEMON.length);
-  if(!choices.includes(p))choices.push(p);
- }
- options.innerHTML='';
- choices.forEach(pi=>{
-  let p=POKEMON[pi];
-  let btn=document.createElement('button');
-  btn.className='pkmoption';
-  btn.innerHTML=`<div style="font-size:32px">${p.emoji}</div><div>${p.name}</div>`;
-  btn.onclick=()=>{
-   let caught=Math.random()<0.7;
-   if(caught){
-    if(!caughtPoke.includes(pi)){caughtPoke.push(pi);localStorage.setItem('puz_caught',JSON.stringify(caughtPoke));}
-    alert('🎉 捉到了 '+p.name+'!');
-   } else {
-    alert('😢 '+p.name+' 跑掉了...');
-   }
-   balls=0;
-   document.getElementById('catchmodal').style.display='none';
-   gameState='play';
-   combo=0;
-   let m2=findMatches();
-   if(m2.length>0)processMatches(m2,cb);
-   else cb();
-  };
-  options.appendChild(btn);
- });
+ catchModal={showing:true,selectedPoke:null,result:null,phase:0,phaseTimer:0,cb:cb};
+ let options=document.getElementById('catchoptions'),choices=[];
+ while(choices.length<3){let p=Math.floor(Math.random()*POKEMON.length);if(!choices.includes(p))choices.push(p);}
+ options.innerHTML='';options.style.opacity='1';
+ choices.forEach(pi=>{let p=POKEMON[pi],btn=document.createElement('button');btn.className='pkmoption';btn.innerHTML='<div style="font-size:32px">'+p.emoji+'</div><div>'+p.name+'</div>';btn.onclick=()=>{if(catchModal.phase>0)return;catchModal.selectedPoke={...p,idx:pi};catchModal.phase=1;catchModal.phaseTimer=performance.now();options.style.opacity='0';document.getElementById('catchtitle').textContent='准备捕捉...';document.getElementById('catchprompt').textContent='.';};options.appendChild(btn);});
  document.getElementById('catchmodal').style.display='flex';
+ let modalEl=document.getElementById('catchmodal');
+ modalEl.style.opacity='0';modalEl.style.transform='scale(0.8)';
+ modalEl.style.transition='opacity .3s,transform .3s cubic-bezier(0.175,0.885,0.32,1.275)';
+ requestAnimationFrame(()=>{modalEl.style.opacity='1';modalEl.style.transform='scale(1)';});
+ function updateCatch(){
+  if(!catchModal.showing)return;
+  let now=performance.now();
+  if(catchModal.phase===1){
+   let elapsed=now-catchModal.phaseTimer,dots=Math.floor(elapsed/400)%4;
+   document.getElementById('catchprompt').textContent='.'.repeat(dots);
+   if(elapsed>1200){catchModal.phase=2;catchModal.phaseTimer=now;document.getElementById('catchtitle').textContent='捕捉中...';}
+  } else if(catchModal.phase===2){
+   let elapsed=now-catchModal.phaseTimer,opts=document.getElementById('catchoptions');
+   let sh=Math.sin(elapsed*0.05)*Math.min(8,elapsed*0.02);opts.style.transform='translateX('+sh+'px)';
+   if(elapsed>800){opts.style.transform='';catchModal.phase=3;catchModal.phaseTimer=now;let caught=Math.random()<0.7;catchModal.result={caught,pidx:catchModal.selectedPoke.idx};document.getElementById('catchtitle').textContent=caught?'🎉 捉到了!':'😢 跑掉了...';document.getElementById('catchprompt').textContent=caught?catchModal.selectedPoke.name+' 被收服了!':catchModal.selectedPoke.name+' 挣脱了...';let btn=document.createElement('button');btn.className='pkmoption';btn.innerHTML='<div style="font-size:14px;color:#aaa">点击继续</div>';btn.style.marginTop='10px';btn.onclick=()=>{balls=0;document.getElementById('catchmodal').style.display='none';gameState='play';catchModal.showing=false;combo=0;let m2=findMatches();if(m2.length>0)processMatches(m2,catchModal.cb);else catchModal.cb();};document.getElementById('catchoptions').innerHTML='';document.getElementById('catchoptions').appendChild(btn);if(caught&&!caughtPoke.includes(catchModal.selectedPoke.idx)){caughtPoke.push(catchModal.selectedPoke.idx);localStorage.setItem('puz_caught',JSON.stringify(caughtPoke));}return;}
+  }
+  requestAnimationFrame(updateCatch);
+ }
+ requestAnimationFrame(updateCatch);
 }
-function renderDex(){
- let grid=document.getElementById('dexgrid');
- grid.innerHTML='';
+function renderDex(newSpeciesIdx){
+ let grid=document.getElementById('dexgrid');grid.innerHTML='';
  POKEMON.forEach((p,i)=>{
-  let caught=caughtPoke.includes(i);
-  let seen=dexSeen.includes(i)||caught;
-  let div=document.createElement('div');
+  let caught=caughtPoke.includes(i),seen=dexSeen.includes(i)||caught,div=document.createElement('div');
   div.className='dexentry'+(caught?' caught':'');
-  div.innerHTML=`<div class="emoji">${seen?p.emoji:'❓'}</div><div style="font-size:10px;color:#aaa">#${String(i+1).padStart(3,'0')}</div><div style="font-size:11px">${seen?p.name:'???'}</div><div style="font-size:10px;color:${caught?'#2ecc71':'#f39c12'}">${caught?'已捕捉':'未捕捉'}</div>`;
+  if(newSpeciesIdx===i){div.classList.add('new-entry');dexReveal={active:true,progress:0,species:i,entryEl:div};}
+  div.innerHTML='<div class="emoji">'+(seen?p.emoji:'❓')+'</div><div style="font-size:10px;color:#aaa">#'+String(i+1).padStart(3,'0')+'</div><div style="font-size:11px">'+(seen?p.name:'???')+'</div><div style="font-size:10px;color:'+(caught?'#2ecc71':'#f39c12')+'">'+(caught?'已捕捉':'未捕捉')+'</div>';
   grid.appendChild(div);
  });
 }

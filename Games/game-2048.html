@@ -26,19 +26,19 @@
     width: 100%;
     max-width: 420px;
   }
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    gap: 12px;
-  }
   .title {
     font-size: 2rem;
     color: #FF6B6B;
     text-shadow: 3px 3px 0 #8B0000, 0 0 20px #FF6B6B44;
     letter-spacing: 4px;
     font-weight: bold;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 12px;
   }
   .scores {
     display: flex;
@@ -47,10 +47,12 @@
   .score-box {
     background: #16213e;
     border: 2px solid #FF6B6B;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 6px 14px;
     text-align: center;
     min-width: 80px;
+    position: relative;
+    overflow: hidden;
   }
   .score-label {
     font-size: 0.65rem;
@@ -64,21 +66,71 @@
     font-weight: bold;
     text-shadow: 0 0 10px #FF6B6B88;
   }
+
+  /* Best score flash */
+  @keyframes best-flash {
+    0%   { border-color: #FF6B6B; box-shadow: none; }
+    40%  { border-color: #ffd700; box-shadow: 0 0 20px #ffd700, inset 0 0 10px #ffd70044; }
+    100% { border-color: #FF6B6B; box-shadow: none; }
+  }
+  .score-box.best-flash { animation: best-flash 600ms ease; }
+
+  /* Board shake on game over */
+  @keyframes shake {
+    0%   { transform: translateX(0); }
+    15%  { transform: translateX(-4px); }
+    30%  { transform: translateX(4px); }
+    45%  { transform: translateX(-4px); }
+    60%  { transform: translateX(4px); }
+    75%  { transform: translateX(-2px); }
+    90%  { transform: translateX(2px); }
+    100% { transform: translateX(0); }
+  }
+  .board.shake { animation: shake 300ms ease; }
+
   .board {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     background: #0f3460;
     border: 3px solid #FF6B6B;
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 10px;
     width: 100%;
     aspect-ratio: 1;
     position: relative;
     box-shadow: 0 0 30px #FF6B6B33, inset 0 0 20px #00000066;
   }
+
+  /* Swipe direction indicator */
+  .swipe-indicator {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0s;
+  }
+  .swipe-indicator.show {
+    opacity: 1;
+    animation: swipe-fade 400ms ease forwards;
+  }
+  .swipe-indicator .arrow {
+    font-size: 3rem;
+    color: rgba(255,255,255,0.5);
+    text-shadow: 0 0 20px rgba(255,255,255,0.3);
+  }
+  @keyframes swipe-fade {
+    0%   { opacity: 0.7; transform: scale(0.8); }
+    50%  { opacity: 0.5; transform: scale(1.1); }
+    100% { opacity: 0; transform: scale(1); }
+  }
+
   .cell {
-    border-radius: 8px;
+    border-radius: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -86,8 +138,9 @@
     font-size: clamp(1.5rem, 8vw, 2.5rem);
     transition: transform 80ms ease;
     position: relative;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.2);
   }
-  .cell-0    { background: #16213e; }
+  .cell-0    { background: #16213e; box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
   .cell-2    { background: #eee8d5; color: #4a4a4a; }
   .cell-4    { background: #ede0c8; color: #4a4a4a; }
   .cell-8    { background: #f2b179; color: #fff; }
@@ -106,16 +159,53 @@
     50%  { transform: scale(1.2); }
     100% { transform: scale(1); }
   }
+  .pop { animation: pop 150ms ease; }
+
+  /* New tile appear with bounce */
+  @keyframes new-tile {
+    0%   { transform: scale(0.5); opacity: 0.5; }
+    60%  { transform: scale(1.12); }
+    80%  { transform: scale(0.96); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .new-tile { animation: new-tile 200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+  /* Merge flash white */
+  @keyframes merge-flash {
+    0%   { filter: brightness(1); }
+    30%  { filter: brightness(1.8); }
+    100% { filter: brightness(1); }
+  }
+  .merge-flash { animation: merge-flash 150ms ease; }
+
   @keyframes win-pulse {
     0%   { box-shadow: 0 0 10px #edc22e88; }
     100% { box-shadow: 0 0 30px #edc22e; }
   }
-  .pop { animation: pop 150ms ease; }
 
+  /* Score pop float-up animation */
+  .score-pop {
+    position: absolute;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 0 8px #ffd700;
+    pointer-events: none;
+    z-index: 20;
+    animation: score-pop-anim 700ms ease forwards;
+  }
+  @keyframes score-pop-anim {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
+  }
+
+  /* Frosted glass overlay */
   .overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.75);
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border-radius: 12px;
     display: flex;
     flex-direction: column;
@@ -137,6 +227,74 @@
     color: #fff;
     opacity: 0.8;
   }
+
+  /* Confetti */
+  .confetti-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 15;
+    border-radius: 12px;
+  }
+  @keyframes confetti-rise {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(-400px) rotate(720deg); opacity: 0; }
+  }
+  .confetti-particle {
+    position: absolute;
+    bottom: 10%;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    animation: confetti-rise linear forwards;
+  }
+
+  /* Confirm dialog */
+  .confirm-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    z-index: 20;
+    display: none;
+  }
+  .confirm-overlay.show { display: flex; }
+  .confirm-text {
+    font-size: 1.2rem;
+    color: #fff;
+    font-weight: bold;
+    letter-spacing: 2px;
+  }
+  .confirm-buttons {
+    display: flex;
+    gap: 12px;
+  }
+  .confirm-btn {
+    background: #FF6B6B;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    letter-spacing: 2px;
+    box-shadow: 2px 2px 0 #8B0000;
+    transition: transform 60ms, box-shadow 60ms;
+  }
+  .confirm-btn:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #8B0000; }
+  .confirm-btn.yes { background: #f65e3b; }
+  .confirm-btn.no  { background: #4a5568; box-shadow: 2px 2px 0 #2d3748; }
+
   .controls {
     display: flex;
     gap: 10px;
@@ -148,7 +306,7 @@
     background: #FF6B6B;
     color: #1a1a2e;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 10px 24px;
     font-size: 1rem;
     font-weight: bold;
@@ -174,20 +332,31 @@
   <div class="title">2048 🔢</div>
   <div class="header">
     <div class="scores">
-      <div class="score-box">
+      <div class="score-box" id="score-box">
         <div class="score-label">分数</div>
         <div class="score-value" id="score">0</div>
       </div>
-      <div class="score-box">
+      <div class="score-box" id="best-box">
         <div class="score-label">最高</div>
         <div class="score-value" id="best">0</div>
       </div>
     </div>
   </div>
   <div class="board" id="board">
+    <div class="swipe-indicator" id="swipe-indicator">
+      <span class="arrow" id="swipe-arrow">↑</span>
+    </div>
+    <div class="confetti-container" id="confetti-container"></div>
     <div class="overlay" id="overlay">
       <div class="overlay-title" id="overlay-title">游戏结束</div>
       <div class="overlay-sub" id="overlay-sub"></div>
+    </div>
+    <div class="confirm-overlay" id="confirm-overlay">
+      <div class="confirm-text">确定重开？</div>
+      <div class="confirm-buttons">
+        <button class="confirm-btn yes" id="confirm-yes">是</button>
+        <button class="confirm-btn no"  id="confirm-no">否</button>
+      </div>
     </div>
   </div>
   <div class="controls">
@@ -200,27 +369,35 @@
 <script>
 (function() {
   const SIZE = 4;
-  let grid = [], score = 0, best = 0, won = false, over = false;
+  let grid = [], score = 0, best = 0, won = false, over = false, gameStarted = false;
   let cellEls = [];
 
-  const boardEl = document.getElementById('board');
-  const scoreEl = document.getElementById('score');
-  const bestEl  = document.getElementById('best');
-  const overlay = document.getElementById('overlay');
-  const overlayTitle = document.getElementById('overlay-title');
-  const overlaySub   = document.getElementById('overlay-sub');
-  const btnNew     = document.getElementById('btn-new');
-  const btnContinue = document.getElementById('btn-continue');
+  const boardEl        = document.getElementById('board');
+  const scoreEl        = document.getElementById('score');
+  const bestEl         = document.getElementById('best');
+  const scoreBoxEl     = document.getElementById('score-box');
+  const bestBoxEl      = document.getElementById('best-box');
+  const overlay        = document.getElementById('overlay');
+  const overlayTitle   = document.getElementById('overlay-title');
+  const overlaySub     = document.getElementById('overlay-sub');
+  const btnNew         = document.getElementById('btn-new');
+  const btnContinue    = document.getElementById('btn-continue');
+  const confirmOverlay = document.getElementById('confirm-overlay');
+  const confirmYes     = document.getElementById('confirm-yes');
+  const confirmNo      = document.getElementById('confirm-no');
+  const confettiCont   = document.getElementById('confetti-container');
+  const swipeIndicator = document.getElementById('swipe-indicator');
+  const swipeArrow     = document.getElementById('swipe-arrow');
 
   best = parseInt(localStorage.getItem('2048-best') || '0');
 
   function buildCells() {
-    while (boardEl.children.length > 1) boardEl.removeChild(boardEl.lastChild);
+    while (boardEl.children.length > 3) boardEl.removeChild(boardEl.lastChild);
     cellEls = [];
     for (let i = 0; i < SIZE * SIZE; i++) {
       const el = document.createElement('div');
       el.className = 'cell';
-      boardEl.appendChild(el);
+      boardEl.insertBefore(el, boardEl.querySelector('.overlay'));
       cellEls.push(el);
     }
   }
@@ -229,12 +406,13 @@
 
   function init() {
     grid = Array.from({length: SIZE}, () => Array(SIZE).fill(0));
-    score = 0; won = false; over = false;
+    score = 0; won = false; over = false; gameStarted = false;
     overlay.classList.remove('show');
     btnContinue.style.display = 'none';
+    confettiCont.innerHTML = '';
     addTile(); addTile();
     render();
-    updateScore();
+    updateScore(0);
   }
 
   function addTile() {
@@ -245,6 +423,12 @@
     if (!empty.length) return;
     const [r, c] = empty[Math.floor(Math.random() * empty.length)];
     grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+    // Mark new tile for animation
+    const el = cellEls[idx(r, c)];
+    el.classList.remove('new-tile');
+    void el.offsetWidth;
+    el.classList.add('new-tile');
+    setTimeout(() => el.classList.remove('new-tile'), 250);
   }
 
   function render() {
@@ -258,13 +442,40 @@
     }
   }
 
-  function updateScore() {
-    scoreEl.textContent = score;
+  // Animated score counter
+  let scoreAnimId = null;
+  function updateScore(newPoints) {
+    const prev = score;
+    if (scoreAnimId) clearInterval(scoreAnimId);
+    if (newPoints > 0) {
+      const target = prev + newPoints;
+      const duration = 300;
+      const startTime = performance.now();
+      scoreAnimId = setInterval(() => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // ease out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        scoreEl.textContent = Math.round(prev + (newPoints * eased));
+        if (progress >= 1) {
+          scoreEl.textContent = target;
+          clearInterval(scoreAnimId);
+          scoreAnimId = null;
+        }
+      }, 16);
+    } else {
+      scoreEl.textContent = prev;
+    }
+    // Best score flash
     if (score > best) {
       best = score;
       localStorage.setItem('2048-best', best);
+      bestEl.textContent = best;
+      bestBoxEl.classList.remove('best-flash');
+      void bestBoxEl.offsetWidth;
+      bestBoxEl.classList.add('best-flash');
+      setTimeout(() => bestBoxEl.classList.remove('best-flash'), 650);
     }
-    bestEl.textContent = best;
   }
 
   function popCell(r, c) {
@@ -272,6 +483,54 @@
     el.classList.remove('pop');
     void el.offsetWidth;
     el.classList.add('pop');
+    setTimeout(() => el.classList.remove('pop'), 200);
+  }
+
+  function flashCell(r, c) {
+    const el = cellEls[idx(r, c)];
+    el.classList.remove('merge-flash');
+    void el.offsetWidth;
+    el.classList.add('merge-flash');
+    setTimeout(() => el.classList.remove('merge-flash'), 200);
+  }
+
+  // Score pop float: shows "+N" at merge cell, floats to score box
+  function showScorePop(r, c, points) {
+    const el = cellEls[idx(r, c)];
+    const rect = el.getBoundingClientRect();
+    const boardRect = boardEl.getBoundingClientRect();
+    const pop = document.createElement('div');
+    pop.className = 'score-pop';
+    pop.textContent = '+' + points;
+    pop.style.left = (rect.left - boardRect.left + rect.width / 2 - 15) + 'px';
+    pop.style.top  = (rect.top  - boardRect.top  + rect.height / 2 - 10) + 'px';
+    boardEl.appendChild(pop);
+    setTimeout(() => pop.remove(), 750);
+  }
+
+  // Show confetti on win
+  function showConfetti() {
+    const colors = ['#FF6B6B','#ffd700','#4ade80','#60a5fa','#f472b6','#c084fc'];
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'confetti-particle';
+      p.style.left = (Math.random() * 90 + 5) + '%';
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.animationDuration = (Math.random() * 1000 + 800) + 'ms';
+      p.style.animationDelay = (Math.random() * 400) + 'ms';
+      confettiCont.appendChild(p);
+    }
+    setTimeout(() => { confettiCont.innerHTML = ''; }, 3000);
+  }
+
+  // Show swipe direction arrow briefly
+  function showSwipeDir(dir) {
+    const arrows = { left:'←', right:'→', up:'↑', down:'↓' };
+    swipeArrow.textContent = arrows[dir] || '';
+    swipeIndicator.classList.remove('show');
+    void swipeIndicator.offsetWidth;
+    swipeIndicator.classList.add('show');
+    setTimeout(() => swipeIndicator.classList.remove('show'), 450);
   }
 
   // Slide & merge one row to the left
@@ -296,7 +555,6 @@
     if (over && !won) return;
     let moved = false;
     let points = 0;
-    let mergePos = [];
 
     const g2 = grid.map(r => [...r]);
 
@@ -306,7 +564,6 @@
         if (row.join() !== g2[r].join()) moved = true;
         g2[r] = row;
         points += p;
-        row.forEach((v, c) => { if (v > 0 && (c === 0 || g2[r][c] !== g2[r][c-1] || row[c-1] === 0)) {} });
       }
     } else if (dir === 'right') {
       for (let r = 0; r < SIZE; r++) {
@@ -343,25 +600,26 @@
 
     grid = g2;
     score += points;
+    if (!gameStarted) gameStarted = true;
 
-    // Find merge positions for pop animation
-    if (points > 0) {
-      for (let r = 0; r < SIZE; r++)
-        for (let c = 0; c < SIZE; c++)
-          if (grid[r][c] > 0 && grid[r][c] !== g2[r][c]) {}
-    }
+    showSwipeDir(dir);
 
     addTile();
     render();
-    updateScore();
+    updateScore(points);
 
-    // Pop animation on changed cells
-    setTimeout(() => {
-      for (let r = 0; r < SIZE; r++)
-        for (let c = 0; c < SIZE; c++)
-          if (grid[r][c] > 0 && grid[r][c] !== g2[r][c])
-            popCell(r, c);
-    }, 10);
+    // Merge detection: compare g2 (grid state before move) with grid (after)
+    // A merge happened when new value = 2x old value at same position
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        const oldVal = g2[r][c];
+        const newVal = grid[r][c];
+        if (newVal > 0 && newVal === oldVal * 2) {
+          flashCell(r, c);
+          showScorePop(r, c, newVal);
+        }
+      }
+    }
 
     // Check win
     if (!won) {
@@ -369,6 +627,7 @@
         for (let c = 0; c < SIZE; c++)
           if (grid[r][c] === 2048) { won = true; break outer; }
       if (won) {
+        showConfetti();
         overlayTitle.textContent = '🎉 你赢了！';
         overlaySub.textContent = '可以继续玩哦~';
         overlay.classList.add('show');
@@ -379,6 +638,10 @@
     // Check over
     if (!canMove()) {
       over = true;
+      boardEl.classList.remove('shake');
+      void boardEl.offsetWidth;
+      boardEl.classList.add('shake');
+      setTimeout(() => boardEl.classList.remove('shake'), 350);
       overlayTitle.textContent = '💀 游戏结束';
       overlaySub.textContent = '分数: ' + score;
       overlay.classList.add('show');
@@ -404,7 +667,7 @@
     if (map[e.key]) { e.preventDefault(); move(map[e.key]); }
   });
 
-  // Touch swipe
+  // Touch swipe on board
   let tx0, ty0;
   boardEl.addEventListener('touchstart', e => {
     tx0 = e.touches[0].clientX;
@@ -418,11 +681,12 @@
     if (Math.max(adx, ady) < 20) return;
     if (adx > ady) move(dx > 0 ? 'right' : 'left');
     else          move(dy > 0 ? 'down'  : 'up');
+    tx0 = ty0 = null;
   }, { passive: true });
 
-  // Also allow swiping on the whole page
+  // Touch swipe on whole page
   document.addEventListener('touchend', e => {
-    if (e.target.closest('.btn') || e.target.closest('.hint')) return;
+    if (e.target.closest('.btn') || e.target.closest('.hint') || e.target.closest('.confirm-overlay')) return;
     if (tx0 == null) return;
     const dx = e.changedTouches[0].clientX - tx0;
     const dy = e.changedTouches[0].clientY - ty0;
@@ -430,9 +694,27 @@
     if (Math.max(adx, ady) < 30) return;
     if (adx > ady) move(dx > 0 ? 'right' : 'left');
     else          move(dy > 0 ? 'down'  : 'up');
+    tx0 = ty0 = null;
   }, { passive: true });
 
-  btnNew.addEventListener('click', init);
+  // New Game confirmation
+  btnNew.addEventListener('click', () => {
+    if (gameStarted && score > 0 && !over) {
+      confirmOverlay.classList.add('show');
+    } else {
+      init();
+    }
+  });
+
+  confirmYes.addEventListener('click', () => {
+    confirmOverlay.classList.remove('show');
+    init();
+  });
+
+  confirmNo.addEventListener('click', () => {
+    confirmOverlay.classList.remove('show');
+  });
+
   btnContinue.addEventListener('click', () => {
     over = false;
     overlay.classList.remove('show');
@@ -440,6 +722,7 @@
 
   buildCells();
   init();
+
 })();
 </script>
 </body>

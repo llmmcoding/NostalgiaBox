@@ -6,110 +6,29 @@
 <title>跳跳像素人 🏃</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #1a1a2e;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    font-family: 'Courier New', monospace;
-    overflow: hidden;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 800px;
-    padding: 8px;
-    gap: 8px;
-  }
-  .hud {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    padding: 0 4px;
-    gap: 8px;
-  }
-  .hud-item {
-    background: #16213e;
-    border: 2px solid #FF6B6B;
-    border-radius: 8px;
-    padding: 6px 16px;
-    text-align: center;
-    min-width: 90px;
-    flex: 1;
-  }
-  .hud-label {
-    font-size: 0.6rem;
-    color: #FF6B6B;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-  .hud-val {
-    font-size: 1.4rem;
-    color: #fff;
-    font-weight: bold;
-    text-shadow: 0 0 10px #FF6B6B88;
-  }
-  canvas {
-    display: block;
-    border: 3px solid #FF6B6B;
-    border-radius: 8px;
-    background: #0f3460;
-    box-shadow: 0 0 30px #FF6B6B33;
-    width: 100%;
-    max-height: 70vh;
-    cursor: pointer;
-  }
-  .hint {
-    color: #888;
-    font-size: 0.7rem;
-    letter-spacing: 1px;
-    text-align: center;
-  }
-  .btn {
-    background: #FF6B6B;
-    color: #1a1a2e;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 32px;
-    font-size: 1rem;
-    font-weight: bold;
-    font-family: 'Courier New', monospace;
-    cursor: pointer;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    box-shadow: 3px 3px 0 #8B0000;
-    transition: transform 60ms;
-  }
+  body { background: #1a1a2e; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Courier New', monospace; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .wrap { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 800px; padding: 8px; gap: 8px; }
+  .hud { display: flex; justify-content: space-between; width: 100%; padding: 0 4px; gap: 8px; }
+  .hud-item { background: #16213e; border: 2px solid #FF6B6B; border-radius: 8px; padding: 6px 16px; text-align: center; min-width: 90px; flex: 1; }
+  .hud-label { font-size: 0.6rem; color: #FF6B6B; letter-spacing: 2px; text-transform: uppercase; }
+  .hud-val { font-size: 1.4rem; color: #fff; font-weight: bold; text-shadow: 0 0 10px #FF6B6B88; }
+  canvas { display: block; border: 3px solid #FF6B6B; border-radius: 8px; background: #0f3460; box-shadow: 0 0 30px #FF6B6B33; width: 100%; max-height: 70vh; cursor: pointer; }
+  .hint { color: #888; font-size: 0.7rem; letter-spacing: 1px; text-align: center; }
+  .btn { background: #FF6B6B; color: #1a1a2e; border: none; border-radius: 8px; padding: 10px 32px; font-size: 1rem; font-weight: bold; font-family: 'Courier New', monospace; cursor: pointer; letter-spacing: 2px; text-transform: uppercase; box-shadow: 3px 3px 0 #8B0000; transition: transform 60ms; }
   .btn:active { transform: translate(2px, 2px); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="hud">
-    <div class="hud-item">
-      <div class="hud-label">分数</div>
-      <div class="hud-val" id="score">0</div>
-    </div>
-    <div class="hud-item">
-      <div class="hud-label">最高</div>
-      <div class="hud-val" id="best">0</div>
-    </div>
-    <div class="hud-item">
-      <div class="hud-label">速度</div>
-      <div class="hud-val" id="speed">100%</div>
-    </div>
+    <div class="hud-item"><div class="hud-label">分数</div><div class="hud-val" id="score">0</div></div>
+    <div class="hud-item"><div class="hud-label">最高</div><div class="hud-val" id="best">0</div></div>
+    <div class="hud-item"><div class="hud-label">速度</div><div class="hud-val" id="speed">100%</div></div>
   </div>
   <canvas id="c"></canvas>
   <button class="btn" id="btn-start">开始游戏</button>
   <div class="hint">空格 / 上 / W / 点击 跳跃，空中可二段跳</div>
 </div>
-
 <script>
 (function() {
   const canvas = document.getElementById('c');
@@ -119,17 +38,18 @@
   const speedEl = document.getElementById('speed');
   const btnStart = document.getElementById('btn-start');
 
-  const GRAVITY  = 0.8;
-  const JUMP_VY  = -15;
-  const DJUMP_VY = -10;
-  const FPS      = 60;
-  const FRAME_MS = 1000 / FPS;
+  const GRAVITY  = 0.8, JUMP_VY = -15, DJUMP_VY = -10, FPS = 60, FRAME_MS = 1000 / FPS;
 
-  let W = 0, H = 0;
-  let running = false, dead = false;
-  let score = 0, best = 0, speedMult = 1;
-  let gameTime = 0, lastFrame = 0;
-  let animId = null;
+  let W = 0, H = 0, running = false, dead = false;
+  let score = 0, best = 0, speedMult = 1, gameTime = 0, lastFrame = 0, animId = null;
+
+  // Polish state
+  let screenShake = 0, deathParticles = [], playerFlashFrames = 0, wasGrounded = true;
+  let milestonePopups = [], lastMilestone = 0, speedPopup = null, lastSpeedMult = 1;
+  let obsFlashObs = null, obsFlashTimer = 0;
+  let deathAnim = { active: false, rot: 0, opacity: 1 };
+  let displayScore = 0, floatingPops = [], doubleJumpRing = null;
+  let countdown = { active: false, val: 3, timer: 0 }, hills = [];
 
   best = parseInt(localStorage.getItem('runner-best') || '0');
   bestEl.textContent = best;
@@ -141,446 +61,282 @@
     const ratio = 800 / 400;
     let w = maxW, h = w / ratio;
     if (h > maxH) { h = maxH; w = h * ratio; }
-    canvas.width  = Math.floor(w);
-    canvas.height = Math.floor(h);
-    W = canvas.width;
-    H = canvas.height;
+    canvas.width = Math.floor(w); canvas.height = Math.floor(h);
+    W = canvas.width; H = canvas.height;
   }
 
-  const player = {
-    x: 80, y: 0, w: 30, h: 40,
-    vy: 0,
-    grounded: false,
-    canDouble: true,
-    frame: 0, tick: 0,
-  };
+  const player = { x: 80, y: 0, w: 30, h: 40, vy: 0, grounded: false, canDouble: true, frame: 0, tick: 0 };
+  let groundY = 0, obstacles = [], nextObsIn = 0, clouds = [], particles = [];
 
-  let groundY = 0;
-  let obstacles = [];
-  let nextObsIn = 0;
-  let clouds = [];
-  let particles = [];
+  function initHills() {
+    hills = [];
+    for (let i = 0; i < 6; i++) hills.push({ x: i * 200 - 50, layer: 0, h: 60 + Math.random() * 40, w: 180 + Math.random() * 80, col: '#1a3a5c' });
+    for (let i = 0; i < 8; i++) hills.push({ x: i * 140 - 30, layer: 1, h: 40 + Math.random() * 30, w: 120 + Math.random() * 60, col: '#1f4a6e' });
+  }
 
   function resetGame() {
     groundY = H - 60;
     player.y = groundY - player.h;
-    player.vy = 0;
-    player.grounded = true;
-    player.canDouble = true;
-    player.frame = 0;
-    player.tick = 0;
-    obstacles = [];
-    particles = [];
-    clouds = [];
-    score = 0;
-    speedMult = 1;
-    gameTime = 0;
-    nextObsIn = 80;
-    for (let i = 0; i < 5; i++) {
-      clouds.push({
-        x: Math.random() * W,
-        y: 20 + Math.random() * (H * 0.35),
-        w: 40 + Math.random() * 60,
-        spd: 0.3 + Math.random() * 0.5,
-      });
-    }
-    dead = false;
-    updateHUD();
+    player.vy = 0; player.grounded = true; player.canDouble = true; player.frame = 0; player.tick = 0;
+    obstacles = []; particles = []; clouds = [];
+    score = 0; speedMult = 1; gameTime = 0; nextObsIn = 80;
+    displayScore = 0; lastMilestone = 0; lastSpeedMult = 1;
+    deathParticles = []; floatingPops = []; doubleJumpRing = null;
+    speedPopup = null; obsFlashObs = null; obsFlashTimer = 0;
+    deathAnim = { active: false, rot: 0, opacity: 1 };
+    screenShake = 0; playerFlashFrames = 0; wasGrounded = true;
+    for (let i = 0; i < 5; i++) clouds.push({ x: Math.random() * W, y: 20 + Math.random() * (H * 0.35), w: 40 + Math.random() * 60, spd: 0.3 + Math.random() * 0.5 });
+    initHills(); dead = false; updateHUD();
   }
 
   function spawnObstacle() {
     const r = Math.random();
-    if (r < 0.5) {
-      // hole
-      const ow = 40 + Math.random() * 30;
-      obstacles.push({ type: 'hole', x: W + 10, y: groundY, w: ow, h: 20, passed: false });
-    } else if (r < 0.8) {
-      // rock
-      const rh = 25 + Math.random() * 20;
-      obstacles.push({ type: 'rock', x: W + 10, y: groundY - rh, w: 28, h: rh, passed: false });
-    } else {
-      // bird
-      const by = groundY - 60 - Math.random() * 60;
-      obstacles.push({ type: 'bird', x: W + 10, y: by, w: 36, h: 20, passed: false, wing: 0 });
+    if (r < 0.5) obstacles.push({ type: 'hole', x: W + 10, y: groundY, w: 40 + Math.random() * 30, h: 20, passed: false });
+    else if (r < 0.8) { const rh = 25 + Math.random() * 20; obstacles.push({ type: 'rock', x: W + 10, y: groundY - rh, w: 28, h: rh, passed: false }); }
+    else obstacles.push({ type: 'bird', x: W + 10, y: groundY - 60 - Math.random() * 60, w: 36, h: 20, passed: false, wing: 0 });
+  }
+
+  function spawnDust() {
+    for (let i = 0; i < 5; i++) particles.push({ x: player.x + player.w / 2, y: player.y + player.h, vx: (Math.random() - 0.5) * 4, vy: -Math.random() * 3, life: 1, size: 3 + Math.random() * 3 });
+  }
+
+  function spawnLandingDust() {
+    for (let i = 0; i < 4; i++) particles.push({ x: player.x + player.w / 2 + (Math.random() - 0.5) * 20, y: groundY, vx: (Math.random() - 0.5) * 3, vy: -Math.random() * 2 - 0.5, life: 1, size: 2 + Math.random() * 2 });
+  }
+
+  function spawnDeathParticles() {
+    for (let i = 0; i < 10; i++) {
+      const angle = (Math.PI * 2 * i) / 10 + Math.random() * 0.4;
+      const spd = 3 + Math.random() * 4;
+      deathParticles.push({ x: player.x + player.w / 2, y: player.y + player.h / 2, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd - 2, life: 1, size: 4 + Math.random() * 5 });
     }
   }
 
   function jump() {
     if (dead) return;
-    if (player.grounded) {
-      player.vy = JUMP_VY;
-      player.grounded = false;
-      player.canDouble = true;
-      spawnDust();
-    } else if (player.canDouble) {
-      player.vy = DJUMP_VY;
-      player.canDouble = false;
-      spawnDust();
-    }
-  }
-
-  function spawnDust() {
-    for (let i = 0; i < 5; i++) {
-      particles.push({
-        x: player.x + player.w / 2,
-        y: player.y + player.h,
-        vx: (Math.random() - 0.5) * 4,
-        vy: -Math.random() * 3,
-        life: 1, size: 3 + Math.random() * 3,
-      });
-    }
+    if (player.grounded) { player.vy = JUMP_VY; player.grounded = false; player.canDouble = true; spawnDust(); }
+    else if (player.canDouble) { player.vy = DJUMP_VY; player.canDouble = false; spawnDust(); doubleJumpRing = { x: player.x + player.w / 2, y: player.y + player.h, r: 8, life: 1 }; }
   }
 
   function updateHUD() {
-    scoreEl.textContent = score;
-    if (score > best) {
-      best = score;
-      localStorage.setItem('runner-best', best);
-    }
+    scoreEl.textContent = Math.floor(displayScore);
+    if (score > best) { best = score; localStorage.setItem('runner-best', best); }
     bestEl.textContent = best;
     speedEl.textContent = Math.round(speedMult * 100) + '%';
   }
 
-  // Input
-  function handleJump() { if (running && !dead) jump(); }
-
   document.addEventListener('keydown', e => {
-    if (['Space','ArrowUp','KeyW'].includes(e.code)) {
-      e.preventDefault();
-      if (!running) startGame(); else jump();
-    }
+    if (['Space','ArrowUp','KeyW'].includes(e.code)) { e.preventDefault(); if (!running && !countdown.active) startGame(); else if (running) jump(); }
   });
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); if (!running && !countdown.active) startGame(); else if (running) jump(); }, { passive: false });
+  canvas.addEventListener('mousedown', e => { if (!running && !countdown.active) startGame(); else if (running) jump(); });
+  btnStart.addEventListener('click', () => { resetGame(); startGame(); });
 
-  canvas.addEventListener('touchstart', e => {
-    e.preventDefault();
-    if (!running) startGame(); else jump();
-  }, { passive: false });
-
-  canvas.addEventListener('mousedown', e => {
-    if (!running) startGame(); else jump();
-  });
-
-  btnStart.addEventListener('click', () => {
-    resetGame();
-    startGame();
-  });
-
-  function startGame() {
-    running = true;
-    dead = false;
-    btnStart.textContent = '重新开始';
-    lastFrame = performance.now();
-    if (animId) cancelAnimationFrame(animId);
-    loop(lastFrame);
-  }
+  function startGame() { countdown.active = true; countdown.val = 3; countdown.timer = 60; dead = false; btnStart.textContent = '重新开始'; draw(); }
+  function reallyStartGame() { running = true; dead = false; lastFrame = performance.now(); if (animId) cancelAnimationFrame(animId); loop(lastFrame); }
 
   function loop(now) {
-    if (!running) return;
-    const rawDt = Math.min(now - lastFrame, 50);
-    lastFrame = now;
-    // dt in "frames" (1 = one 60fps frame)
+    if (!running && !countdown.active) return;
+    const rawDt = Math.min(now - lastFrame, 50); lastFrame = now;
     const dt = rawDt / FRAME_MS;
-    update(dt);
-    draw();
-    animId = requestAnimationFrame(loop);
+    if (countdown.active) {
+      countdown.timer -= dt;
+      if (countdown.timer <= 0) { countdown.val--; countdown.timer = 60; if (countdown.val <= 0) { countdown.active = false; reallyStartGame(); return; } }
+      draw(); animId = requestAnimationFrame(loop); return;
+    }
+    update(dt); draw(); animId = requestAnimationFrame(loop);
   }
 
   function update(dt) {
     gameTime += dt * FRAME_MS;
     speedMult = Math.min(2.0, 1.0 + Math.floor(gameTime / 10000) * 0.05);
-
     const spd = 5 * speedMult;
 
-    // Score from time
+    if (displayScore < score) { displayScore += Math.max(1, (score - displayScore) * 0.12); if (displayScore > score) displayScore = score; }
     score = Math.floor(gameTime / 100);
+
+    [500, 1000, 2000, 3000, 5000, 8000, 10000].forEach(m => { if (score >= m && lastMilestone < m) { lastMilestone = m; milestonePopups.push({ text: m + '点！', life: 1, scale: 0.5 }); } });
+    if (speedMult > lastSpeedMult) { speedPopup = { text: '速度加快！', life: 1 }; lastSpeedMult = speedMult; }
     updateHUD();
 
-    // Player physics
-    player.vy += GRAVITY * dt;
-    player.y  += player.vy * dt;
+    wasGrounded = player.grounded;
+    player.vy += GRAVITY * dt; player.y += player.vy * dt;
 
-    // Ground collision
     let onHole = false;
     if (player.y + player.h >= groundY) {
-      // Check if over a hole
-      for (const obs of obstacles) {
-        if (obs.type === 'hole') {
-          const px = player.x, pw = player.w;
-          if (px + pw > obs.x + 4 && px < obs.x + obs.w - 4) {
-            onHole = true;
-            break;
-          }
-        }
-      }
-      if (!onHole) {
-        player.y = groundY - player.h;
-        player.vy = 0;
-        player.grounded = true;
-        player.canDouble = true;
-      } else {
-        // falling into hole
-        if (player.grounded) player.grounded = false;
-      }
+      for (const obs of obstacles) { if (obs.type === 'hole' && player.x + player.w > obs.x + 4 && player.x < obs.x + obs.w - 4) { onHole = true; break; } }
+      if (!onHole) { player.y = groundY - player.h; player.vy = 0; const wasAir = !player.grounded; player.grounded = true; player.canDouble = true; if (wasAir) spawnLandingDust(); }
+      else if (player.grounded) player.grounded = false;
     }
-
-    // Fell off screen
     if (player.y > H + 60) { die(); return; }
 
-    // Animation
     player.tick += dt;
     if (player.tick > 6) { player.tick = 0; player.frame = (player.frame + 1) % 4; }
+    if (playerFlashFrames > 0) playerFlashFrames -= dt;
+    if (deathAnim.active) { deathAnim.rot += 1.5 * dt; deathAnim.opacity -= 0.025 * dt; if (deathAnim.opacity < 0.5) deathAnim.opacity = 0.5; if (deathAnim.rot > 0.52) deathAnim.rot = 0.52; }
 
-    // Clouds
-    clouds.forEach(c => {
-      c.x -= c.spd * speedMult * dt;
-      if (c.x + c.w < 0) {
-        c.x = W + 10;
-        c.y = 20 + Math.random() * (H * 0.35);
-      }
-    });
+    clouds.forEach(c => { c.x -= c.spd * speedMult * dt; if (c.x + c.w < 0) { c.x = W + 10; c.y = 20 + Math.random() * (H * 0.35); } });
+    hills.forEach(h => { h.x -= spd * (h.layer === 0 ? 0.15 : 0.3) * dt; if (h.x + h.w < 0) { const maxX = Math.max(...hills.filter(hh => hh.layer === h.layer).map(hh => hh.x + hh.w)); h.x = maxX + 10 + Math.random() * 30; h.h = (h.layer === 0 ? 60 : 40) + Math.random() * (h.layer === 0 ? 40 : 30); } });
 
-    // Particles
-    particles.forEach(p => {
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vy += 0.15 * dt;
-      p.life -= 0.05 * dt;
-    });
+    particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.15 * dt; p.life -= 0.05 * dt; });
     particles = particles.filter(p => p.life > 0);
+    deathParticles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 0.2 * dt; p.life -= 0.04 * dt; });
+    deathParticles = deathParticles.filter(p => p.life > 0);
+    if (doubleJumpRing) { doubleJumpRing.r += 1.5 * dt; doubleJumpRing.life -= 0.06 * dt; if (doubleJumpRing.life <= 0) doubleJumpRing = null; }
+    if (screenShake > 0) screenShake -= dt;
+    if (obsFlashTimer > 0) obsFlashTimer -= dt;
 
-    // Spawn obstacles
     nextObsIn -= dt * speedMult;
-    if (nextObsIn <= 0) {
-      spawnObstacle();
-      nextObsIn = 50 + Math.random() * 60;
-    }
+    if (nextObsIn <= 0) { spawnObstacle(); nextObsIn = 50 + Math.random() * 60; }
 
-    // Update & collision
     obstacles.forEach(obs => {
       obs.x -= spd * dt;
       if (obs.type === 'bird') obs.wing = (obs.wing + 0.15 * dt) % 2;
-
-      // Score for passing
-      if (!obs.passed && obs.x + obs.w < player.x) {
-        obs.passed = true;
-        score += 50;
-      }
-
-      // Collision
-      const px = player.x + 5, py = player.y + 5;
-      const pw = player.w - 10, ph = player.h - 8;
-
-      if (obs.type === 'rock') {
-        if (px < obs.x + obs.w && px + pw > obs.x && py < obs.y + obs.h && py + ph > obs.y) {
-          die();
-        }
-      } else if (obs.type === 'bird') {
-        if (px < obs.x + obs.w && px + pw > obs.x && py < obs.y + obs.h && py + ph > obs.y) {
-          die();
-        }
+      if (!obs.passed && obs.x + obs.w < player.x) { obs.passed = true; score += 50; floatingPops.push({ x: obs.x + obs.w / 2, y: obs.y, text: '+50', life: 1, vy: -2 }); }
+      if (!dead) {
+        const px = player.x + 5, py = player.y + 5, pw = player.w - 10, ph = player.h - 8;
+        let hit = false;
+        if (obs.type === 'rock' && px < obs.x + obs.w && px + pw > obs.x && py < obs.y + obs.h && py + ph > obs.y) hit = true;
+        else if (obs.type === 'bird' && px < obs.x + obs.w && px + pw > obs.x && py < obs.y + obs.h && py + ph > obs.y) hit = true;
+        if (hit && !obs._deathFlag) { obsFlashObs = obs; obsFlashTimer = 6; playerFlashFrames = 6; obs._deathFlag = true; obs._deathT = 0; }
+        if (obs._deathFlag) { obs._deathT = (obs._deathT || 0) + dt; if (obs._deathT >= 6) { obs._deathFlag = false; die(); } }
       }
     });
-
-    // Remove off-screen
     obstacles = obstacles.filter(o => o.x + o.w > -20);
+
+    milestonePopups.forEach(p => { p.life -= 0.025 * dt; p.scale = Math.min(1.4, p.scale + 0.08 * dt); });
+    milestonePopups = milestonePopups.filter(p => p.life > 0);
+    if (speedPopup) { speedPopup.life -= 0.04 * dt; if (speedPopup.life <= 0) speedPopup = null; }
+    floatingPops.forEach(p => { p.y += p.vy * dt; p.life -= 0.04 * dt; });
+    floatingPops = floatingPops.filter(p => p.life > 0);
   }
 
-  function die() {
-    if (dead) return;
-    dead = true;
-    running = false;
-    if (animId) cancelAnimationFrame(animId);
-    updateHUD();
-    draw();
-    btnStart.textContent = '再来一次';
-  }
+  function die() { if (dead) return; dead = true; running = false; screenShake = 18; spawnDeathParticles(); deathAnim.active = true; deathAnim.rot = 0; deathAnim.opacity = 1; if (animId) cancelAnimationFrame(animId); updateHUD(); draw(); btnStart.textContent = '再来一次'; }
 
   function draw() {
+    ctx.save();
+    if (screenShake > 0) ctx.translate(Math.sin(screenShake * 3.2) * 6, 0);
+
     ctx.clearRect(0, 0, W, H);
-
-    // Sky gradient
     const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, '#0f3460');
-    grad.addColorStop(1, '#16213e');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-
-    // Stars
+    grad.addColorStop(0, '#0f3460'); grad.addColorStop(1, '#16213e');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    for (let i = 0; i < 30; i++) {
-      const sx = (i * 73 + 11) % W;
-      const sy = (i * 137 + 23) % Math.floor(H * 0.5);
-      ctx.fillRect(sx, sy, 2, 2);
-    }
+    for (let i = 0; i < 30; i++) ctx.fillRect((i * 73 + 11) % W, (i * 137 + 23) % Math.floor(H * 0.5), 2, 2);
 
-    // Clouds
+    // Parallax hills
+    [...hills].sort((a,b) => a.layer - b.layer).forEach(h => {
+      ctx.fillStyle = h.col;
+      ctx.beginPath(); ctx.moveTo(h.x, groundY);
+      ctx.quadraticCurveTo(h.x + h.w / 2, groundY - h.h, h.x + h.w, groundY);
+      ctx.lineTo(h.x + h.w, groundY); ctx.closePath(); ctx.fill();
+    });
+
     ctx.fillStyle = 'rgba(255,255,255,0.1)';
     clouds.forEach(c => {
-      ctx.beginPath();
-      ctx.ellipse(c.x + c.w / 2, c.y, c.w / 2, c.w / 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(c.x + c.w * 0.3, c.y + 6, c.w / 3, c.w / 5, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.ellipse(c.x + c.w / 2, c.y, c.w / 2, c.w / 4, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(c.x + c.w * 0.3, c.y + 6, c.w / 3, c.w / 5, 0, 0, Math.PI * 2); ctx.fill();
     });
 
-    // Draw holes first (cut into ground)
-    obstacles.forEach(obs => {
-      if (obs.type === 'hole') {
-        ctx.fillStyle = '#0a1628';
-        ctx.fillRect(obs.x, obs.y, obs.w, obs.h + 20);
-        // hole edges
-        ctx.fillStyle = '#1a3a5c';
-        ctx.fillRect(obs.x - 3, obs.y, 3, obs.h);
-        ctx.fillRect(obs.x + obs.w, obs.y, 3, obs.h);
-      }
-    });
+    // Hole edge warning
+    for (const obs of obstacles) { if (obs.type === 'hole') { const gap = obs.x - (player.x + player.w); if (gap > 0 && gap < 50) { const alpha = (1 - gap / 50) * 0.5; ctx.fillStyle = 'rgba(255,50,50,' + alpha + ')'; ctx.fillRect(obs.x - 4, obs.y, 4, obs.h + 10); ctx.fillRect(obs.x + obs.w, obs.y, 4, obs.h + 10); } } }
 
-    // Ground
-    ctx.fillStyle = '#2d6a4f';
-    ctx.fillRect(0, groundY, W, H - groundY);
-    ctx.fillStyle = '#52b788';
-    ctx.fillRect(0, groundY, W, 4);
-    // Grass tufts
+    obstacles.forEach(obs => { if (obs.type === 'hole') { ctx.fillStyle = '#0a1628'; ctx.fillRect(obs.x, obs.y, obs.w, obs.h + 20); ctx.fillStyle = '#1a3a5c'; ctx.fillRect(obs.x - 3, obs.y, 3, obs.h); ctx.fillRect(obs.x + obs.w, obs.y, 3, obs.h); } });
+
+    ctx.fillStyle = '#2d6a4f'; ctx.fillRect(0, groundY, W, H - groundY);
+    ctx.fillStyle = '#52b788'; ctx.fillRect(0, groundY, W, 4);
     ctx.fillStyle = '#52b788aa';
-    for (let gx = 0; gx < W; gx += 20) {
-      let inHole = false;
-      for (const obs of obstacles) {
-        if (obs.type === 'hole' && gx + 8 > obs.x && gx < obs.x + obs.w) { inHole = true; break; }
-      }
-      if (!inHole) ctx.fillRect(gx, groundY - 4, 8, 4);
-    }
+    for (let gx = 0; gx < W; gx += 20) { let inHole = false; for (const obs of obstacles) { if (obs.type === 'hole' && gx + 8 > obs.x && gx < obs.x + obs.w) { inHole = true; break; } } if (!inHole) ctx.fillRect(gx, groundY - 4, 8, 4); }
 
-    // Obstacles (rocks & birds)
     obstacles.forEach(obs => {
       if (obs.type === 'rock') {
-        // Rock body
-        ctx.fillStyle = '#6b705c';
-        ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-        // Top highlight
-        ctx.fillStyle = '#a5a58d';
-        ctx.fillRect(obs.x + 2, obs.y + 2, obs.w - 6, 5);
-        // Side dark
-        ctx.fillStyle = '#4a4a3a';
-        ctx.fillRect(obs.x + obs.w - 5, obs.y + 5, 5, obs.h - 5);
-        // Pixel detail
-        ctx.fillStyle = '#d4c5a0aa';
-        ctx.fillRect(obs.x + 4, obs.y + 4, 3, 3);
+        const flash = obs === obsFlashObs && obsFlashTimer > 0;
+        ctx.fillStyle = flash ? '#ff4444' : '#4a4a3a'; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+        ctx.fillStyle = flash ? '#ff6666' : '#6b705c'; ctx.fillRect(obs.x + 2, obs.y + 2, obs.w - 4, obs.h - 6);
+        ctx.fillStyle = flash ? '#ffaaaa' : '#a5a58d'; ctx.fillRect(obs.x + 3, obs.y + 2, obs.w - 8, 6);
+        if (!flash) { ctx.fillStyle = '#2a2a2a'; ctx.fillRect(obs.x + 8, obs.y + 10, 2, 8); ctx.fillRect(obs.x + 10, obs.y + 14, 5, 2); ctx.fillRect(obs.x + 5, obs.y + 18, 2, 4); ctx.fillStyle = '#2a2a1a'; ctx.fillRect(obs.x + 1, obs.y + obs.h - 5, obs.w - 2, 5); }
       } else if (obs.type === 'bird') {
+        const flash = obs === obsFlashObs && obsFlashTimer > 0;
         const wx = Math.sin(obs.wing * Math.PI) * 6;
-        // Wings
-        ctx.fillStyle = '#e63946';
-        ctx.fillRect(obs.x + 4, obs.y + 8 - wx, 10, 6);
-        ctx.fillRect(obs.x + 18, obs.y + 8 - wx, 10, 6);
-        // Body
-        ctx.fillStyle = '#e63946';
+        const bodyCol = flash ? '#ff6666' : '#e63946';
+        ctx.fillStyle = bodyCol; ctx.fillRect(obs.x + 4, obs.y + 8 - wx, 10, 6); ctx.fillRect(obs.x + 18, obs.y + 8 - wx, 10, 6);
         ctx.fillRect(obs.x + 8, obs.y + 6, 18, 10);
-        // Eye
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(obs.x + 22, obs.y + 8, 4, 4);
-        ctx.fillStyle = '#000';
-        ctx.fillRect(obs.x + 23, obs.y + 9, 2, 2);
-        // Beak
-        ctx.fillStyle = '#f4a261';
-        ctx.fillRect(obs.x + 26, obs.y + 10, 5, 3);
+        ctx.fillStyle = '#fff'; ctx.fillRect(obs.x + 22, obs.y + 8, 4, 4);
+        ctx.fillStyle = '#000'; ctx.fillRect(obs.x + 23, obs.y + 9, 2, 2);
+        ctx.fillStyle = '#f4a261'; ctx.fillRect(obs.x + 26, obs.y + 10, 5, 3);
       }
     });
 
-    // Particles
-    particles.forEach(p => {
-      ctx.globalAlpha = p.life;
-      ctx.fillStyle = '#d4c5a0';
-      ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+    particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = '#d4c5a0'; ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size); });
+    ctx.globalAlpha = 1;
+
+    if (doubleJumpRing) { ctx.globalAlpha = doubleJumpRing.life * 0.6; ctx.strokeStyle = '#4cc9f0'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(doubleJumpRing.x, doubleJumpRing.y, doubleJumpRing.r, doubleJumpRing.r * 0.5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1; }
+
+    drawPlayer();
+
+    deathParticles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = '#e63946'; ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size); });
+    ctx.globalAlpha = 1;
+
+    floatingPops.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px Courier New'; ctx.textAlign = 'center'; ctx.fillText(p.text, p.x, p.y); });
+    ctx.globalAlpha = 1;
+
+    if (speedPopup) { ctx.globalAlpha = speedPopup.life; ctx.fillStyle = '#ff9f1c'; ctx.font = 'bold 16px Courier New'; ctx.textAlign = 'right'; ctx.fillText(speedPopup.text, W - 10, 30); ctx.globalAlpha = 1; }
+
+    milestonePopups.forEach(p => {
+      ctx.save(); ctx.globalAlpha = p.life; ctx.translate(W / 2, H / 2 - 60); ctx.scale(p.scale, p.scale);
+      ctx.fillStyle = '#ffd700'; ctx.font = 'bold 36px Courier New'; ctx.textAlign = 'center'; ctx.fillText(p.text, 0, 0); ctx.restore();
     });
     ctx.globalAlpha = 1;
 
-    // Player (pixel person)
-    drawPlayer();
+    if (countdown.active) {
+      ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#FF6B6B'; ctx.font = 'bold ' + Math.round(W * 0.25) + 'px Courier New'; ctx.fillText(countdown.val, W / 2, H / 2 - 20);
+      ctx.fillStyle = '#ffffffaa'; ctx.font = Math.round(W * 0.05) + 'px Courier New'; ctx.fillText('跳跳像素人', W / 2, H / 2 + 40);
+    }
 
-    // Overlay if dead
     if (dead) {
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(0, 0, W, H);
-
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      ctx.fillStyle = '#FF6B6B';
-      ctx.font = 'bold ' + Math.round(W * 0.1) + 'px Courier New';
-      ctx.fillText('💀 游戏结束', W / 2, H / 2 - 30);
-
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold ' + Math.round(W * 0.06) + 'px Courier New';
-      ctx.fillText('分数: ' + score, W / 2, H / 2 + 10);
-      ctx.fillText('最高: ' + best, W / 2, H / 2 + 40);
-
-      ctx.fillStyle = '#FF6B6B88';
-      ctx.font = Math.round(W * 0.04) + 'px Courier New';
-      ctx.fillText('点击「再来一次」重新开始', W / 2, H / 2 + 80);
+      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#FF6B6B'; ctx.font = 'bold ' + Math.round(W * 0.1) + 'px Courier New'; ctx.fillText('💀 游戏结束', W / 2, H / 2 - 30);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(W * 0.06) + 'px Courier New'; ctx.fillText('分数: ' + score, W / 2, H / 2 + 10); ctx.fillText('最高: ' + best, W / 2, H / 2 + 40);
+      ctx.fillStyle = '#FF6B6B88'; ctx.font = Math.round(W * 0.04) + 'px Courier New'; ctx.fillText('点击「再来一次」重新开始', W / 2, H / 2 + 80);
     }
 
-    // Overlay if not started
-    if (!running && !dead) {
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(0, 0, W, H);
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#FF6B6B';
-      ctx.font = 'bold ' + Math.round(W * 0.08) + 'px Courier New';
-      ctx.fillText('跳跳像素人 🏃', W / 2, H / 2 - 30);
-      ctx.fillStyle = '#ffffffaa';
-      ctx.font = Math.round(W * 0.04) + 'px Courier New';
-      ctx.fillText('空格 / 上 / W / 点击跳跃', W / 2, H / 2 + 15);
-      ctx.fillText('空中可二段跳', W / 2, H / 2 + 40);
+    if (!running && !dead && !countdown.active) {
+      ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#FF6B6B'; ctx.font = 'bold ' + Math.round(W * 0.08) + 'px Courier New'; ctx.fillText('跳跳像素人 🏃', W / 2, H / 2 - 30);
+      ctx.fillStyle = '#ffffffaa'; ctx.font = Math.round(W * 0.04) + 'px Courier New'; ctx.fillText('空格 / 上 / W / 点击跳跃', W / 2, H / 2 + 15); ctx.fillText('空中可二段跳', W / 2, H / 2 + 40);
     }
+
+    ctx.restore();
   }
 
   function drawPlayer() {
-    const x = Math.round(player.x);
-    const y = Math.round(player.y);
-    const w = player.w;
-    const h = player.h;
-    const f = player.frame;
-
-    // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    ctx.fillRect(x + 2, groundY - 2, w - 4, 4);
-
-    // Legs animation
+    const x = Math.round(player.x), y = Math.round(player.y), w = player.w, h = player.h, f = player.frame;
+    ctx.save();
+    if (deathAnim.active) { ctx.globalAlpha = deathAnim.opacity; ctx.translate(x + w / 2, y + h / 2); ctx.rotate(deathAnim.rot); ctx.translate(-(x + w / 2), -(y + h / 2)); }
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(x + 2, groundY - 2, w - 4, 4);
     const legOffset = player.grounded ? [0, 2, 0, -2][f % 4] : 0;
-    // Body
-    ctx.fillStyle = '#4cc9f0';
-    ctx.fillRect(x + 6, y + 12, w - 12, h - 22);
-    // Head
-    ctx.fillStyle = '#f4a261';
-    ctx.fillRect(x + 8, y + 2, w - 16, 12);
-    // Eyes
-    ctx.fillStyle = '#000';
-    ctx.fillRect(x + 12, y + 6, 3, 3);
-    ctx.fillRect(x + 17, y + 6, 3, 3);
-    // Mouth
-    ctx.fillStyle = '#c1121f';
-    ctx.fillRect(x + 13, y + 11, 6, 2);
-    // Arms
-    ctx.fillStyle = '#f4a261';
+    const flash = playerFlashFrames > 0;
+    ctx.fillStyle = flash ? '#ffffff' : '#4cc9f0'; ctx.fillRect(x + 6, y + 12, w - 12, h - 22);
+    ctx.fillStyle = flash ? '#ffffff' : '#f4a261'; ctx.fillRect(x + 8, y + 2, w - 16, 12);
+    ctx.fillStyle = flash ? '#ffffff' : '#000'; ctx.fillRect(x + 12, y + 6, 3, 3); ctx.fillRect(x + 17, y + 6, 3, 3);
+    ctx.fillStyle = flash ? '#ffffff' : '#c1121f'; ctx.fillRect(x + 13, y + 11, 6, 2);
+    ctx.fillStyle = flash ? '#ffffff' : '#f4a261';
     const armSwing = player.grounded ? [2, 4, 2, 0][f % 4] : 4;
-    ctx.fillRect(x + 2, y + 14 + armSwing, 5, 10);
-    ctx.fillRect(x + w - 7, y + 14 - armSwing, 5, 10);
-    // Legs
-    ctx.fillStyle = '#3a86ff';
-    ctx.fillRect(x + 8, y + h - 10 + legOffset, 5, 10 - legOffset);
-    ctx.fillRect(x + w - 13, y + h - 10 - legOffset, 5, 10 + legOffset);
-    // Shoes
-    ctx.fillStyle = '#e63946';
-    ctx.fillRect(x + 6, y + h - 4 + legOffset, 7, 4);
-    ctx.fillRect(x + w - 13, y + h - 4 - legOffset, 7, 4);
+    ctx.fillRect(x + 2, y + 14 + armSwing, 5, 10); ctx.fillRect(x + w - 7, y + 14 - armSwing, 5, 10);
+    ctx.fillStyle = flash ? '#ffffff' : '#3a86ff';
+    ctx.fillRect(x + 8, y + h - 10 + legOffset, 5, 10 - legOffset); ctx.fillRect(x + w - 13, y + h - 10 - legOffset, 5, 10 + legOffset);
+    ctx.fillStyle = flash ? '#ffffff' : '#e63946';
+    ctx.fillRect(x + 6, y + h - 4 + legOffset, 7, 4); ctx.fillRect(x + w - 13, y + h - 4 - legOffset, 7, 4);
+    ctx.globalAlpha = 1; ctx.restore();
   }
 
-  // Init
   resize();
   window.addEventListener('resize', () => { resize(); if (!running && !dead) draw(); });
-  resetGame();
-  draw();
+  resetGame(); draw();
 })();
 </script>
 </body>

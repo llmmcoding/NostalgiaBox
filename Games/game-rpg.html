@@ -9,8 +9,8 @@
 body{background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,sans-serif;overflow:hidden}
 h1{color:#fff;font-size:16px;margin-bottom:8px;text-align:center;letter-spacing:2px}
 #gameCanvas{background:#0a0a1a;border:2px solid #333;border-radius:8px;image-rendering:pixelated;max-width:100%}
-.ui-bar{display:flex;gap:8px;margin:8px 0;width:100%;max-width:480px;padding:0 8px}
-.stat-box{flex:1;background:#16213e;border-radius:8px;padding:6px 8px;color:#fff;font-size:11px}
+.ui-bar{display:flex;gap:8px;margin:8px 0;width:100%;max-width:480px;padding:0 8px;position:relative}
+.stat-box{flex:1;background:#16213e;border-radius:8px;padding:6px 8px;color:#fff;font-size:11px;position:relative}
 .stat-label{color:#888;font-size:9px;margin-bottom:2px}
 .hp-bar{height:8px;background:#333;border-radius:4px;overflow:hidden;margin-top:2px}
 .hp-fill{height:100%;border-radius:4px;transition:width .2s}
@@ -23,19 +23,25 @@ h1{color:#fff;font-size:16px;margin-bottom:8px;text-align:center;letter-spacing:
 .ctrl-wide{grid-column:span 3}
 .ctrl-skill{background:#7c3aed}
 .ctrl-skill.cooldown{background:#333;color:#555}
+.ctrl-skill.ready{animation:skillPulse .5s ease-in-out 3}
+@keyframes skillPulse{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.7)}50%{box-shadow:0 0 0 10px rgba(124,58,237,0)}}
 #overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10}
 #overlay h2{color:#fff;font-size:28px;margin-bottom:16px}
-#overlay p{color:#aaa;font-size:14px;margin:6px 0}
+#overlay p{color:#aaa;font-size:14px;margin:6px 0;white-space:pre-line}
 .btn{padding:10px 28px;background:#ff6b6b;color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer;margin-top:12px}
 .btn:active{transform:scale(.96)}
 .shop{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:12}
 .shop h2{color:#fff;font-size:20px;margin-bottom:12px}
 .shop-item{display:flex;gap:12px;margin:8px 0;align-items:center}
-.shop-item button{padding:6px 16px;background:#ff6b6b;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer}
+.shop-item button{position:relative;padding:6px 16px;background:#ff6b6b;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer}
+.shop-item button .check{position:absolute;top:-6px;right:-6px;font-size:14px;color:#4ade80;pointer-events:none;opacity:0;transform:scale(0);transition:all .2s}
+.shop-item button .check.show{opacity:1;transform:scale(1)}
 .shop-close{margin-top:12px;padding:8px 24px;background:#444;color:#fff;border:none;border-radius:6px;cursor:pointer}
-.dpad{position:fixed;bottom:20px;left:20px;display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:2px}
-.dpad-btn{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.15);border:none;border-radius:8px;color:#fff;font-size:18px;cursor:pointer;touch-action:manipulation}
-.dpad-btn:active{background:rgba(255,255,255,.3)}
+#chapterCard{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;pointer-events:none;opacity:0}
+#chapterCard h2{color:#fbbf24;font-size:36px;text-shadow:0 0 20px rgba(251,191,36,.6);letter-spacing:4px}
+#chapterCard p{color:#fff;font-size:16px;margin-top:8px;letter-spacing:2px}
+#defeatMsg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9;pointer-events:none;opacity:0}
+#defeatMsg span{color:#ff4757;font-size:48px;font-weight:bold;text-shadow:0 0 30px rgba(255,71,87,.8);letter-spacing:8px}
 </style>
 </head>
 <body>
@@ -56,7 +62,6 @@ h1{color:#fff;font-size:16px;margin-bottom:8px;text-align:center;letter-spacing:
   <div class="ctrl" id="btnRight">→</div>
   <div class="ctrl ctrl-wide ctrl-skill" id="btnSkill">🔥 火球术</div>
 </div>
-<canvas id="dpadCanvas" class="dpad" width="138" height="138" style="display:none"></canvas>
 
 <div id="overlay" style="display:none">
   <h2 id="overlayTitle">像素勇者</h2>
@@ -66,187 +71,293 @@ h1{color:#fff;font-size:16px;margin-bottom:8px;text-align:center;letter-spacing:
 
 <div class="shop" id="shop" style="display:none">
   <h2>🏪 商店</h2>
-  <div class="shop-item"><span>❤️ +50 HP</span><button onclick="buyItem('hp')">💰20</button></div>
-  <div class="shop-item"><span>⚔️ +5 攻击</span><button onclick="buyItem('atk')">💰50</button></div>
-  <div class="shop-item"><span>🛡️ +3 防御</span><button onclick="buyItem('def')">💰50</button></div>
+  <div class="shop-item"><span>❤️ +50 HP</span><button onclick="buyItem('hp',20,this)">💰20<span class="check">✓</span></button></div>
+  <div class="shop-item"><span>⚔️ +5 攻击</span><button onclick="buyItem('atk',50,this)">💰50<span class="check">✓</span></button></div>
+  <div class="shop-item"><span>🛡️ +3 防御</span><button onclick="buyItem('def',50,this)">💰50<span class="check">✓</span></button></div>
   <button class="shop-close" onclick="closeShop()">继续前进</button>
 </div>
 
+<div id="chapterCard">
+  <h2 id="chapterCardTitle">第二章 · 火山洞穴</h2>
+  <p id="chapterCardSub">章节 2 - 1</p>
+</div>
+
+<div id="defeatMsg"><span>你倒下了</span></div>
+
 <script>
-// Game State
-const G = {
-  hp:100, maxHp:100,
-  mp:100, maxMp:100,
-  atk:10, def:5,
-  exp:0, level:1, gold:0,
-  x:2, y:2,
-  map:[], monsters:[],
-  chapter:1, section:1,
-  skillCd:0,
-  items:{weapon:null,armor:null}
-};
+var G={hp:100,maxHp:100,mp:100,maxMp:100,atk:10,def:5,exp:0,level:1,gold:0,x:2,y:2,map:[],monsters:[],chapter:1,section:1,skillCd:0,invincible:false,invTimer:0,dead:false,skillReadyFlash:false};
+var TILE=32,COLS=15,ROWS=10;
+var canvas=document.getElementById('gameCanvas');
+var ctx=canvas.getContext('2d');
+var particles=[];
+var dmgNums=[];
+var levelUpActive=false;
+var levelUpTimer=0;
+var fireballVignette=0;
+var monsterFlash={};
+var curHp=100,curMp=100;
+var displayedHp=100,displayedMp=100;
+var goldSparkleTimer=0;
+var shakeTimer=0;
+var deathWhiteFlash=0;
 
-const TILE=32;
-const COLS=15,ROWS=10;
+function Particle(x,y,color,vx,vy,life,size){
+  this.x=x;this.y=y;this.color=color;
+  this.vx=vx!==undefined?vx:(Math.random()-.5)*4;
+  this.vy=vy!==undefined?vy:(Math.random()-.5)*4-2;
+  this.life=life||30;this.maxLife=this.life;this.size=size||3;
+}
+Particle.prototype.update=function(){this.x+=this.vx;this.y+=this.vy;this.vy+=.12;this.life--;return this.life>0;};
+Particle.prototype.draw=function(c){var a=this.life/this.maxLife;c.globalAlpha=a;c.fillStyle=this.color;c.beginPath();c.arc(this.x,this.y,Math.max(.1,this.size*a),0,Math.PI*2);c.fill();c.globalAlpha=1;};
 
-// Chapter data
-const CHAPTERS=[
-  {name:'🌲 新手森林',enemies:[
-    {emoji:'🐌',name:'史莱姆',hp:30,atk:5,def:0,exp:10,gold:5},
-    {emoji:'👺',name:'哥布林',hp:50,atk:8,def:2,exp:20,gold:10}
-  ],boss:{emoji:'🌲',name:'树精长老',hp:200,atk:15,def:5,exp:100,gold:50}},
-  {name:'🌋 火山洞穴',enemies:[
-    {emoji:'🔥',name:'火元素',hp:80,atk:18,def:5,exp:30,gold:15}
-  ],boss:{emoji:'🐲',name:'火焰巨龙',hp:400,atk:30,def:10,exp:200,gold:100}},
-  {name:'❄️ 冰霜要塞',enemies:[
-    {emoji:'❄️',name:'冰精灵',hp:120,atk:25,def:8,exp:50,gold:25}
-  ],boss:{emoji:'🧊',name:'冰霜巨人',hp:600,atk:40,def:15,exp:300,gold:150}}
+function DmgNum(x,y,text,color){this.x=x;this.y=y;this.text=text;this.color=color||'#fbbf24';this.life=45;this.maxLife=45;this.vy=-2.5;this.vx=(Math.random()-.5)*.5;}
+DmgNum.prototype.update=function(){this.y+=this.vy;this.vy*=.94;this.life--;return this.life>0;};
+DmgNum.prototype.draw=function(c){var progress=1-this.life/this.maxLife;var scale=1+progress*.4;var alpha=Math.min(1,this.life/12);c.save();c.globalAlpha=alpha;c.font='bold '+Math.round(16*scale)+'px sans-serif';c.textAlign='center';c.fillStyle='#000';c.fillText(this.text,this.x+1.5,this.y+1.5);c.fillStyle=this.color;c.fillText(this.text,this.x,this.y);c.restore();};
+
+var CHAPTERS=[
+  {name:'新手森林',subname:'第一章',enemies:[
+    {emoji:'🐌',name:'史莱姆',hp:30,atk:5,def:0,exp:10,gold:5,colors:['#4ade80','#22c55e']},
+    {emoji:'👺',name:'哥布林',hp:50,atk:8,def:2,exp:20,gold:10,colors:['#fb923c','#ea580c']}
+  ],boss:{emoji:'🌲',name:'树精长老',hp:200,atk:15,def:5,exp:100,gold:50,colors:['#a3e635','#65a30d'],isBoss:true}},
+  {name:'火山洞穴',subname:'第二章',enemies:[
+    {emoji:'🔥',name:'火元素',hp:80,atk:18,def:5,exp:30,gold:15,colors:['#fb923c','#dc2626']}
+  ],boss:{emoji:'🐲',name:'火焰巨龙',hp:400,atk:30,def:10,exp:200,gold:100,colors:['#ef4444','#f97316'],isBoss:true}},
+  {name:'冰霜要塞',subname:'第三章',enemies:[
+    {emoji:'❄️',name:'冰精灵',hp:120,atk:25,def:8,exp:50,gold:25,colors:['#67e8f9','#06b6d4']}
+  ],boss:{emoji:'🧊',name:'冰霜巨人',hp:600,atk:40,def:15,exp:300,gold:150,colors:['#a5f3fc','#3b82f6'],isBoss:true}}
 ];
 
-// Tile types: 0=floor, 1=wall, 2=exit
-function genMap(chapter) {
-  const m=[];
-  for(let y=0;y<ROWS;y++){
-    const row=[];
-    for(let x=0;x<COLS;x++){
-      if(y===0||y===ROWS-1||x===0||x===COLS-1) row.push(1);
-      else row.push(0);
-    }
+function genMap(){
+  var m=[];
+  for(var y=0;y<ROWS;y++){
+    var row=[];
+    for(var x=0;x<COLS;x++){row.push((y===0||y===ROWS-1||x===0||x===COLS-1)?1:0);}
     m.push(row);
   }
-  // Random walls
-  for(let i=0;i<8;i++){
-    const wx=1+Math.floor(Math.random()*(COLS-2));
-    const wy=1+Math.floor(Math.random()*(ROWS-2));
+  for(var i=0;i<8;i++){
+    var wx=1+Math.floor(Math.random()*(COLS-2));
+    var wy=1+Math.floor(Math.random()*(ROWS-2));
     if(wx!==G.x||wy!==G.y) m[wy][wx]=1;
   }
-  // Exit
   m[ROWS-2][COLS-2]=2;
   return m;
 }
 
-function spawnMonsters(chapter,section){
-  const ch=CHAPTERS[chapter-1];
-  const enemies=[];
-  const count=2+section;
-  for(let i=0;i<count;i++){
-    let ex,ey;
-    do{
-      ex=1+Math.floor(Math.random()*(COLS-2));
-      ey=1+Math.floor(Math.random()*(ROWS-2));
-    }while((ex===G.x&&ey===G.y)||(ex===COLS-2&&ey===ROWS-2));
-    const template=ch.enemies[Math.floor(Math.random()*ch.enemies.length)];
-    enemies.push({...template,x:ex,y:ey,alive:true});
+function spawnMonsters(){
+  var ch=CHAPTERS[G.chapter-1];
+  var enemies=[];
+  var count=2+G.section;
+  for(var i=0;i<count;i++){
+    var ex,ey;
+    do{ex=1+Math.floor(Math.random()*(COLS-2));ey=1+Math.floor(Math.random()*(ROWS-2));}
+    while((ex===G.x&&ey===G.y)||(ex===COLS-2&&ey===ROWS-2));
+    var t=ch.enemies[Math.floor(Math.random()*ch.enemies.length)];
+    enemies.push({x:ex,y:ey,alive:true,bossTimer:0,id:Math.random(),flashWhite:0,hp:t.hp,maxHp:t.maxHp||t.hp,emoji:t.emoji,name:t.name,atk:t.atk,def:t.def,exp:t.exp,gold:t.gold,colors:t.colors});
   }
-  // Boss in last section
-  if(section===3){
-    let bx,by;
-    do{
-      bx=1+Math.floor(Math.random()*(COLS-2));
-      by=1+Math.floor(Math.random()*(ROWS-2));
-    }while((bx===G.x&&by===G.y));
-    enemies.push({...ch.boss,x:bx,y:by,alive:true});
+  if(G.section===3){
+    var bx,by;
+    do{bx=1+Math.floor(Math.random()*(COLS-2));by=1+Math.floor(Math.random()*(ROWS-2));}
+    while((bx===G.x&&by===G.y));
+    var bt=ch.boss;
+    enemies.push({x:bx,y:by,alive:true,bossEntrance:90,bossTimer:0,id:Math.random(),flashWhite:0,hp:bt.hp,maxHp:bt.hp,emoji:bt.emoji,name:bt.name,atk:bt.atk,def:bt.def,exp:bt.exp,gold:bt.gold,colors:bt.colors,isBoss:true});
   }
   return enemies;
 }
 
 function draw(){
-  const canvas=document.getElementById('gameCanvas');
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  // Draw tiles
-  for(let y=0;y<ROWS;y++){
-    for(let x=0;x<COLS;x++){
-      const t=G.map[y][x];
-      if(t===1){ctx.fillStyle='#2d2d44';ctx.fillRect(x*TILE,y*TILE,TILE,TILE);}
-      else if(t===2){ctx.fillStyle='#fbbf24';ctx.fillRect(x*TILE,y*TILE,TILE,TILE);}
-      ctx.strokeStyle='#1a1a2e';ctx.strokeRect(x*TILE,y*TILE,TILE,TILE);
+  ctx.save();
+  if(shakeTimer>0){
+    var sint=3*(shakeTimer/15);
+    ctx.translate(Math.cos(shakeTimer*3)*sint,Math.sin(shakeTimer*5)*sint);
+  }
+  ctx.clearRect(-5,-5,canvas.width+10,canvas.height+10);
+  for(var y=0;y<ROWS;y++){
+    for(var x=0;x<COLS;x++){
+      var t=G.map[y][x];
+      ctx.fillStyle=t===1?'#2d2d44':t===2?'#fbbf24':'#0a0a1a';
+      ctx.fillRect(x*TILE,y*TILE,TILE,TILE);
+      ctx.strokeStyle='#1a1a2e';ctx.lineWidth=.5;
+      ctx.strokeRect(x*TILE,y*TILE,TILE,TILE);
     }
   }
-  // Draw monsters
-  G.monsters.forEach(m=>{
+  if(deathWhiteFlash>0){
+    ctx.fillStyle='rgba(255,255,255,'+deathWhiteFlash/10+')';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+  G.monsters.forEach(function(m){
     if(!m.alive) return;
-    ctx.font='22px serif';ctx.textAlign='center';
-    ctx.fillText(m.emoji,(m.x+.5)*TILE,(m.y+.7)*TILE);
-    // HP bar
-    const ratio=m.hp/(m.maxHp||1);
-    ctx.fillStyle='#333';ctx.fillRect(m.x*TILE+2,(m.y+.1)*TILE,TILE-4,3);
-    ctx.fillStyle='#ff4757';ctx.fillRect(m.x*TILE+2,(m.y+.1)*TILE,(TILE-4)*ratio,3);
+    var cx=(m.x+.5)*TILE,cy=(m.y+.7)*TILE;
+    var scale=1,alpha=1;
+    if(m.bossEntrance){
+      var prog=1-m.bossEntrance/90;
+      if(prog<.4){scale=.5+prog*1.25;}
+      else if(prog<.65){scale=1+Math.sin((prog-.4)/.25*Math.PI)*.15;}
+      else{scale=1;}
+      alpha=Math.min(1,prog*2.5);
+    }
+    ctx.save();ctx.globalAlpha=alpha;
+    if(m.flashWhite>0){
+      ctx.font=22*scale+'px serif';ctx.textAlign='center';
+      ctx.fillText('\u2b1c',cx,cy);
+    } else {
+      var blink=G.invincible&&Math.floor(Date.now()/60)%2===0;
+      ctx.font=22*scale+'px serif';ctx.textAlign='center';
+      ctx.globalAlpha=alpha*(blink?0.3:1);
+      ctx.fillText(m.emoji,cx,cy);
+    }
+    ctx.restore();
+    if(m.bossTimer>0&&m.bossTimer<=18){
+      var wa=Math.sin((18-m.bossTimer)/18*Math.PI);
+      ctx.save();ctx.globalAlpha=wa;ctx.font='bold 16px sans-serif';
+      ctx.fillStyle='#ff4757';ctx.textAlign='center';
+      ctx.fillText('!',cx,m.y*TILE+6);ctx.restore();
+    }
+    if(m.maxHp){
+      var ratio=Math.max(0,m.hp/m.maxHp);
+      var bw=TILE-4;
+      ctx.fillStyle='#333';
+      ctx.fillRect(m.x*TILE+2,m.y*TILE+3,bw,4);
+      ctx.fillStyle='#ff4757';
+      ctx.fillRect(m.x*TILE+2,m.y*TILE+3,bw*ratio,4);
+    }
   });
-  // Draw player
-  ctx.font='22px serif';ctx.textAlign='center';
-  ctx.fillText('🧙',(G.x+.5)*TILE,(G.y+.7)*TILE);
-  // Draw chapter
+  particles.forEach(function(p){p.draw(ctx);});
+  dmgNums.forEach(function(d){d.draw(ctx);});
+  if(fireballVignette>0){
+    var va=fireballVignette/15;
+    var grad=ctx.createRadialGradient(canvas.width/2,canvas.height/2,canvas.width*.25,canvas.width/2,canvas.height/2,canvas.width*.75);
+    grad.addColorStop(0,'rgba(255,100,0,0)');
+    grad.addColorStop(.6,'rgba(255,50,0,0)');
+    grad.addColorStop(1,'rgba(255,60,0,'+va*.7+')');
+    ctx.fillStyle=grad;ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+  if(!G.dead){
+    var ba=G.invincible?(Math.floor(Date.now()/60)%2===0?0.25:1):1;
+    ctx.save();ctx.globalAlpha=ba;ctx.font='22px serif';ctx.textAlign='center';
+    ctx.fillText('\ud83e\uddd9',(G.x+.5)*TILE,(G.y+.7)*TILE);ctx.restore();
+  }
+  if(levelUpActive){
+    var lt=levelUpTimer;
+    var lfIn=lt<10?lt/10:1;
+    var lfOut=lt>50?(70-lt)/20:1;
+    var lfa=Math.min(lfIn,lfOut)*.55;
+    if(lfa>0){ctx.fillStyle='rgba(251,191,36,'+lfa+')';ctx.fillRect(0,0,canvas.width,canvas.height);}
+    if(lt>=6&&lt<=70){
+      var lp=(lt-6)/64;
+      var ls=1+Math.sin(lp*Math.PI)*.35;
+      if(lp<.25) ls=lp/.25;
+      var lta=lp<.75?1:1-(lp-.75)/.25;
+      ctx.save();ctx.globalAlpha=Math.min(lta,1);
+      ctx.font='bold '+Math.round(30*ls)+'px sans-serif';
+      ctx.textAlign='center';ctx.strokeStyle='#000';ctx.lineWidth=3;
+      ctx.strokeText('LEVEL UP!',canvas.width/2,canvas.height/2);
+      ctx.fillStyle='#fbbf24';ctx.fillText('LEVEL UP!',canvas.width/2,canvas.height/2);
+      ctx.restore();
+    }
+  }
   ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,canvas.width,20);
   ctx.fillStyle='#fff';ctx.font='11px sans-serif';ctx.textAlign='left';
-  ctx.fillText(`${CHAPTERS[G.chapter-1].name} 第${G.section}节`,4,14);
+  ctx.fillText('\ud83c\udf32 '+CHAPTERS[G.chapter-1].name+' 第'+G.section+'\u8282',4,14);
+  ctx.restore();
 }
 
 function updateUI(){
-  document.getElementById('hpFill').style.width=(G.hp/G.maxHp*100)+'%';
-  document.getElementById('mpFill').style.width=(G.mp/G.maxMp*100)+'%';
-  document.getElementById('hpText').textContent=G.hp+'/'+G.maxHp;
-  document.getElementById('mpText').textContent=G.mp+'/'+G.maxMp;
+  if(Math.abs(curHp-G.hp)>.4){curHp+=(G.hp-curHp)*.12;displayedHp=Math.round(curHp);}
+  else{curHp=G.hp;displayedHp=G.hp;}
+  if(Math.abs(curMp-G.mp)>.4){curMp+=(G.mp-curMp)*.12;displayedMp=Math.round(curMp);}
+  else{curMp=G.mp;displayedMp=G.mp;}
+  document.getElementById('hpFill').style.width=(displayedHp/G.maxHp*100)+'%';
+  document.getElementById('mpFill').style.width=(displayedMp/G.maxMp*100)+'%';
+  document.getElementById('hpText').textContent=Math.round(displayedHp)+'/'+G.maxHp;
+  document.getElementById('mpText').textContent=Math.round(displayedMp)+'/'+G.maxMp;
   document.getElementById('levelText').textContent='Lv.'+G.level;
-  document.getElementById('goldText').textContent='💰'+G.gold;
-  const skillBtn=document.getElementById('btnSkill');
-  if(G.skillCd>0){skillBtn.textContent='⏳'+G.skillCd+'s';skillBtn.classList.add('cooldown');}
-  else{skillBtn.textContent='🔥 火球';skillBtn.classList.remove('cooldown');}
+  document.getElementById('goldText').textContent='\ud83d\udcb0'+G.gold;
+  var skillBtn=document.getElementById('btnSkill');
+  if(G.skillCd>0){
+    skillBtn.textContent='\u23f3'+G.skillCd+'s';
+    skillBtn.classList.add('cooldown');
+    skillBtn.classList.remove('ready');
+  } else {
+    skillBtn.textContent='\ud83d\udd25 火球';
+    skillBtn.classList.remove('cooldown');
+    if(G.skillReadyFlash){
+      G.skillReadyFlash=false;
+      skillBtn.classList.remove('ready');
+      skillBtn.offsetWidth;
+      skillBtn.classList.add('ready');
+    }
+  }
 }
 
 function move(dx,dy){
-  const nx=G.x+dx,ny=G.y+dy;
+  if(G.dead||(G.invincible&&G.invTimer>27)) return;
+  var nx=G.x+dx,ny=G.y+dy;
   if(nx<0||nx>=COLS||ny<0||ny>=ROWS) return;
   if(G.map[ny][nx]===1) return;
-  // Check monster collision
-  const m=G.monsters.find(m=>m.alive&&m.x===nx&&m.y===ny);
+  var m=G.monsters.find(function(mm){return mm.alive&&mm.x===nx&&mm.y===ny;});
   if(m){fight(m);return;}
   G.x=nx;G.y=ny;
-  // Check exit
   if(G.map[ny][nx]===2){nextSection();return;}
   draw();
 }
 
 function fight(m){
-  const dmg=Math.max(1,G.atk-m.def);
+  var dmg=Math.max(1,G.atk-m.def);
   m.hp-=dmg;
-  showMsg(`⚔️ 攻击${m.name}，伤害${dmg}`);
+  dmgNums.push(new DmgNum((m.x+.5)*TILE,m.y*TILE+8,'+'+dmg,'#fbbf24'));
+  m.flashWhite=4;
+  showMsg('\u2694\ufe0f 攻击'+m.name+'，伤害'+dmg);
   if(m.hp<=0){
     m.alive=false;
     G.exp+=m.exp;G.gold+=m.gold;
-    showMsg(`🎉 击败${m.name}！经验+${m.exp} 金币+${m.gold}`);
+    showMsg('\ud83c\udf89 击败'+m.name+'！经验+'+m.exp+' 金币+'+m.gold);
+    spawnDeathEffect(m);
+    goldSparkleTimer=20;
     checkLevelUp();
-    // Check all dead
-    if(G.monsters.every(m=>!m.alive)){openShop();}
+    if(G.monsters.every(function(mm){return !mm.alive;})){openShop();}
+    draw();return;
   }
-  // Monster counter
-  const myDmg=Math.max(1,m.atk-G.def);
-  G.hp-=myDmg;
-  showMsg(`💥 ${m.name}反击，伤害${myDmg}`);
-  if(G.hp<=0){gameOver();return;}
+  if(!G.invincible){
+    var md=Math.max(1,m.atk-G.def);
+    G.hp-=md;
+    dmgNums.push(new DmgNum(canvas.width/2,canvas.height/2,'-'+md,'#ff4757'));
+    showMsg('\ud83d\udca5 '+m.name+'反击，伤害'+md);
+    shakeTimer=15;
+    G.invincible=true;G.invTimer=30;
+    if(G.hp<=0){G.hp=0;gameOver();return;}
+  }
   draw();updateUI();
 }
 
 function castSkill(){
-  if(G.skillCd>0||G.mp<20) return;
+  if(G.skillCd>0||G.mp<20||G.dead) return;
   G.mp-=20;G.skillCd=5;
-  // Find nearest monster
-  let nearest=null,minDist=99;
-  G.monsters.forEach(m=>{
-    if(!m.alive) return;
-    const d=Math.abs(m.x-G.x)+Math.abs(m.y-G.y);
-    if(d<minDist){minDist=d;nearest=m;}
-  });
+  var nearest=null,minDist=99;
+  G.monsters.forEach(function(m){if(!m.alive)return;var d=Math.abs(m.x-G.x)+Math.abs(m.y-G.y);if(d<minDist){minDist=d;nearest=m;}});
   if(nearest){
-    const dmg=Math.max(1,G.atk*2-nearest.def);
+    var dmg=Math.max(1,G.atk*2-nearest.def);
     nearest.hp-=dmg;
-    showMsg(`🔥 火球术！伤害${dmg}`);
+    dmgNums.push(new DmgNum((nearest.x+.5)*TILE,nearest.y*TILE+8,'+'+dmg,'#f97316'));
+    nearest.flashWhite=4;
+    fireballVignette=15;
+    showMsg('\ud83d\udd25 火球术！伤害'+dmg);
+    for(var i=0;i<20;i++){
+      particles.push(new Particle(
+        (nearest.x+.5)*TILE+(Math.random()-.5)*TILE*.8,
+        (nearest.y+.5)*TILE+(Math.random()-.5)*TILE*.8,
+        Math.random()>.4?'#f97316':'#fbbf24',
+        (Math.random()-.5)*3,-Math.random()*3-1,
+        15+Math.random()*15,2+Math.random()*4
+      ));
+    }
     if(nearest.hp<=0){
       nearest.alive=false;
       G.exp+=nearest.exp;G.gold+=nearest.gold;
-      showMsg(`🔥 击败${nearest.name}！经验+${nearest.exp}`);
+      showMsg('\ud83d\udd25 击败'+nearest.name+'！经验+'+nearest.exp);
+      spawnDeathEffect(nearest);
+      goldSparkleTimer=20;
       checkLevelUp();
-      if(G.monsters.every(m=>!m.alive))openShop();
+      if(G.monsters.every(function(mm){return !mm.alive;}))openShop();
     }
   }
   draw();updateUI();
@@ -258,44 +369,94 @@ function checkLevelUp(){
     G.level++;
     G.maxHp+=20;G.hp=G.maxHp;
     G.atk+=3;G.def+=2;
-    showMsg(`⬆️ 升级！等级${G.level}！属性提升！`);
+    showMsg('\u2b06\ufe0f 升级！等级'+G.level+'！属性提升！');
+    triggerLevelUp();
+  }
+}
+
+function triggerLevelUp(){
+  levelUpActive=true;levelUpTimer=0;
+  var colors=['#fbbf24','#f59e0b','#fcd34d','#fff','#fde68a'];
+  for(var i=0;i<35;i++){
+    var angle=Math.random()*Math.PI*2;
+    var speed=2+Math.random()*6;
+    particles.push(new Particle(
+      (G.x+.5)*TILE,(G.y+.7)*TILE,
+      colors[Math.floor(Math.random()*colors.length)],
+      Math.cos(angle)*speed,Math.sin(angle)*speed,
+      25+Math.random()*25,2+Math.random()*4
+    ));
+  }
+}
+
+function spawnDeathEffect(m){
+  var cols=m.colors||['#aaa','#666'];
+  for(var i=0;i<30;i++){
+    var angle=Math.random()*Math.PI*2;
+    var speed=1.5+Math.random()*4;
+    particles.push(new Particle(
+      (m.x+.5)*TILE+(Math.random()-.5)*TILE*.5,
+      (m.y+.5)*TILE+(Math.random()-.5)*TILE*.5,
+      cols[Math.floor(Math.random()*cols.length)],
+      Math.cos(angle)*speed,Math.sin(angle)*speed,
+      20+Math.random()*20,2+Math.random()*5
+    ));
   }
 }
 
 function nextSection(){
   G.section++;
-  if(G.section>3){G.chapter++;G.section=1;showMsg('🏆 进入第'+G.chapter+'章！');}
-  else{showMsg('🚪 进入第'+G.section+'节');}
+  var newChapter=G.section>3;
+  if(newChapter){G.chapter++;G.section=1;}
   if(G.chapter>3){winGame();return;}
-  G.map=genMap(G.chapter);
-  G.monsters=spawnMonsters(G.chapter,G.section);
+  G.map=genMap();
+  G.monsters=spawnMonsters();
   G.x=2;G.y=2;
+  showChapterCard(G.chapter,G.section);
   draw();updateUI();
 }
 
-function openShop(){
-  document.getElementById('shop').style.display='flex';
+function showChapterCard(ch,sec){
+  var card=document.getElementById('chapterCard');
+  var chapter=CHAPTERS[ch-1];
+  document.getElementById('chapterCardTitle').textContent=chapter.subname+' \u00b7 '+chapter.name;
+  document.getElementById('chapterCardSub').textContent='\u7ae3\u8282 '+ch+' - '+sec;
+  card.style.transition='none';card.style.opacity='0';
+  setTimeout(function(){card.style.transition='opacity .6s ease-out';card.style.opacity='1';},50);
+  setTimeout(function(){card.style.transition='opacity 1.2s ease-in';card.style.opacity='0';},2000);
 }
-function closeShop(){
-  document.getElementById('shop').style.display='none';
-}
-function buyItem(type){
-  if(type==='hp'){if(G.gold>=20){G.gold-=20;G.hp=Math.min(G.maxHp,G.hp+50);showMsg('❤️ 购买+50HP');}}
-  else if(type==='atk'){if(G.gold>=50){G.gold-=50;G.atk+=5;showMsg('⚔️ 攻击+5！');}}
-  else if(type==='def'){if(G.gold>=50){G.gold-=50;G.def+=3;showMsg('🛡️ 防御+3！');}}
+
+function openShop(){document.getElementById('shop').style.display='flex';}
+function closeShop(){document.getElementById('shop').style.display='none';nextSection();}
+function buyItem(type,cost,btn){
+  if(G.gold<cost) return;
+  G.gold-=cost;
+  if(type==='hp'){G.hp=Math.min(G.maxHp,G.hp+50);showMsg('\u2764\ufe0f 购买+50HP');}
+  else if(type==='atk'){G.atk+=5;showMsg('\u2694\ufe0f 攻击+5！');}
+  else if(type==='def'){G.def+=3;showMsg('\ud83d\udde1\ufe0f 防御+3！');}
+  var check=btn.querySelector('.check');
+  if(check){check.classList.add('show');setTimeout(function(){check.classList.remove('show');},800);}
   updateUI();
 }
 
 function showMsg(t){document.getElementById('msg').textContent=t;}
 
 function gameOver(){
-  document.getElementById('overlayTitle').textContent='💀 失败';
-  document.getElementById('overlayDesc').textContent='你在第'+G.chapter+'章第'+G.section+'节倒下了';
-  document.getElementById('overlayBtn').textContent='重新开始';
-  document.getElementById('overlay').style.display='flex';
+  G.dead=true;G.hp=0;deathWhiteFlash=10;
+  var dm=document.getElementById('defeatMsg');
+  dm.style.transition='opacity 1.5s';dm.style.opacity='1';
+  updateUI();
+  setTimeout(function(){
+    document.getElementById('overlayTitle').textContent='\ud83d\udc80 失败';
+    document.getElementById('overlayDesc').textContent='你在第'+G.chapter+'\u7ae3\u7b2c'+G.section+'\u8282\u5012\u4e0b\u4e86';
+    document.getElementById('overlayBtn').textContent='重新开始';
+    document.getElementById('overlay').style.display='flex';
+    dm.style.opacity='0';
+  },1200);
 }
+
 function winGame(){
-  document.getElementById('overlayTitle').textContent='🏆 通关！';
+  document.getElementById('overlayTitle').textContent='\ud83c\udfc6 通关！';
   document.getElementById('overlayDesc').textContent='你击败了所有BOSS，成为了真正的勇者！';
   document.getElementById('overlayBtn').textContent='再玩一次';
   document.getElementById('overlay').style.display='flex';
@@ -305,61 +466,65 @@ function startGame(){
   G.hp=100;G.maxHp=100;G.mp=100;G.maxMp=100;
   G.atk=10;G.def=5;G.exp=0;G.level=1;G.gold=0;
   G.x=2;G.y=2;G.chapter=1;G.section=1;G.skillCd=0;
-  G.map=genMap(1);
-  G.monsters=spawnMonsters(1,1);
+  G.invincible=false;G.invTimer=0;G.dead=false;G.skillReadyFlash=false;
+  curHp=100;curMp=100;displayedHp=100;displayedMp=100;
+  particles=[];dmgNums=[];
+  levelUpActive=false;levelUpTimer=0;
+  fireballVignette=0;
+  monsterFlash={};goldSparkleTimer=0;shakeTimer=0;deathWhiteFlash=0;
+  G.map=genMap();G.monsters=spawnMonsters();
   document.getElementById('overlay').style.display='none';
   document.getElementById('shop').style.display='none';
   showMsg('WASD移动，消灭怪物！空格火球术！');
   draw();updateUI();
 }
 
-// Input
-document.addEventListener('keydown',e=>{
-  if(document.getElementById('overlay').style.display!=='none')return;
-  if(e.key==='w'||e.key==='W'||e.key==='ArrowUp')move(0,-1);
-  if(e.key==='s'||e.key==='S'||e.key==='ArrowDown')move(0,1);
-  if(e.key==='a'||e.key==='A'||e.key==='ArrowLeft')move(-1,0);
-  if(e.key==='d'||e.key==='D'||e.key==='ArrowRight')move(1,0);
-  if(e.key===' ')castSkill();
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('overlay').style.display!=='none') return;
+  if(document.getElementById('shop').style.display!=='none') return;
+  if(e.key==='w'||e.key==='W'||e.key==='ArrowUp') move(0,-1);
+  if(e.key==='s'||e.key==='S'||e.key==='ArrowDown') move(0,1);
+  if(e.key==='a'||e.key==='A'||e.key==='ArrowLeft') move(-1,0);
+  if(e.key==='d'||e.key==='D'||e.key==='ArrowRight') move(1,0);
+  if(e.key===' ') castSkill();
 });
 
-// Touch controls
-['Up','Down','Left','Right'].forEach(dir=>{
-  const btn=document.getElementById('btn'+dir);
-  if(!btn)return;
-  let iv;
-  const start=()=>iv=setInterval(()=>{
-    if(dir==='Up')move(0,-1);if(dir==='Down')move(0,1);
-    if(dir==='Left')move(-1,0);if(dir==='Right')move(1,0);
-  },120);
-  btn.addEventListener('touchstart',e=>{e.preventDefault();start();});
-  btn.addEventListener('touchend',()=>clearInterval(iv));
+['Up','Down','Left','Right'].forEach(function(dir){
+  var btn=document.getElementById('btn'+dir);
+  if(!btn) return;
+  var iv;
+  var start=function(){iv=setInterval(function(){
+    if(dir==='Up') move(0,-1);if(dir==='Down') move(0,1);
+    if(dir==='Left') move(-1,0);if(dir==='Right') move(1,0);
+  },120);};
+  btn.addEventListener('touchstart',function(e){e.preventDefault();start();});
+  btn.addEventListener('touchend',function(){clearInterval(iv);});
   btn.addEventListener('mousedown',start);
-  btn.addEventListener('mouseup',()=>clearInterval(iv));
+  btn.addEventListener('mouseup',function(){clearInterval(iv);});
+  btn.addEventListener('mouseleave',function(){clearInterval(iv);});
 });
 document.getElementById('btnSkill').addEventListener('click',castSkill);
 
-// Skill cooldown timer
-setInterval(()=>{
-  if(G.skillCd>0){G.skillCd--;updateUI();}
-  // MP regen
-  if(G.mp<G.maxMp){G.mp=Math.min(G.maxMp,G.mp+1);updateUI();}
-},1000);
-
-// Mobile dpad
-const isMobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
-if(isMobile){
-  document.getElementById('dpadCanvas').style.display='block';
-  const dp=document.getElementById('dpadCanvas').getContext('2d');
-  dp.fillStyle='rgba(255,255,255,.1)';
-  dp.fillRect(44,0,50,50);dp.fillRect(0,44,50,50);dp.fillRect(88,44,50,50);dp.fillRect(44,88,50,50);
+function gameLoop(){
+  if(levelUpActive){levelUpTimer++;if(levelUpTimer>72)levelUpActive=false;}
+  if(G.invincible){G.invTimer--;if(G.invTimer<=0)G.invincible=false;}
+  G.monsters.forEach(function(m){if(m.flashWhite>0)m.flashWhite--;if(m.bossEntrance>0)m.bossEntrance--;});
+  if(fireballVignette>0) fireballVignette--;
+  if(shakeTimer>0) shakeTimer--;
+  if(deathWhiteFlash>0) deathWhiteFlash--;
+  if(goldSparkleTimer>0) goldSparkleTimer--;
+  particles=particles.filter(function(p){return p.update();});
+  dmgNums=dmgNums.filter(function(d){return d.update();});
+  if(G.skillCd>0)G.skillCd--;
+  if(G.mp<G.maxMp)G.mp=Math.min(G.maxMp,G.mp+1);
+  if(G.skillCd===0&&!G.skillReadyFlash&&document.getElementById('btnSkill').classList.contains('cooldown')){
+    G.skillReadyFlash=true;
+  }
+  updateUI();
+  draw();
+  requestAnimationFrame(gameLoop);
 }
-
-// Init
-document.getElementById('overlayTitle').textContent='⚔️ 像素勇者';
-document.getElementById('overlayDesc').textContent='WASD移动，消灭森林、火山、冰霜的怪物，挑战最终BOSS！\n升级、买装备，成为真正的勇者！';
-document.getElementById('overlayBtn').textContent='开始冒险';
-document.getElementById('overlay').style.display='flex';
+gameLoop();
 </script>
 </body>
 </html>
